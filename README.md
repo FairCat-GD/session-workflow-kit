@@ -17,7 +17,8 @@ Everything needed to start a new project under this session-based workflow.
 3. Answer the intake's questions. Each comes with a recommended answer; accept it, change it,
    or defer it. One asks what is private. Your private terms live in one file outside every
    repository, `~/.config/hygiene/terms.txt`, one word per line, shared by all your projects;
-   the intake checks it and adds what you name.
+   the intake checks it and adds what you name. Each project's `verify` then checks every
+   commit against that list, and for AI attribution, secrets and conflict markers.
 4. Approve the plan of documents. Session 0 writes the spec, the session plan, `CLAUDE.md`, the
    backlog and the handoff for Session 1, and commits them locally.
 5. Run `/code-review high`. The session fixes what the review finds, commits the fixes, and

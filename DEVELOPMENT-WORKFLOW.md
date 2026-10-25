@@ -153,8 +153,8 @@ Each of these is cheap on day one and expensive to retrofit.
   Formatting is in the gate from the first commit. It also runs named stages alone
   (`verify hygiene --message <draft>`), so a commit that changes only docs runs only the stages
   that read them (the cycle, step 6).
-- **The hygiene stage** (see *Nothing private in the repository*), reading the owner's term
-  list. Its first run checks the whole history, Session 0's commit included.
+- **The hygiene stage** (see *A clean repository*), reading the owner's term list. Its first
+  run is a full scan, since it has no stamp yet, so Session 0's commit is checked too.
 - **The gate is held by the session and the human; there is no CI.** `verify` is green before
   every commit (only the docs stages, for a commit that changes only docs), the human reviews
   every session, and nothing reaches the remote without their
@@ -262,9 +262,9 @@ the repository.
     close commit after it. A session that ran parallel parts has its contract, the parts'
     commits and the merges before it (see *Parallel parts*). The last act before each commit is
     `verify` run with its drafted message (the docs-only command, for a commit that changes
-    only docs; step 6), after the done-note and the handoff are written, so they are checked
-    too (see *Nothing private in the repository*). Never push without explicit approval for that
-    specific push, and never tag without approval for that tag.
+    only docs; step 6), after the done-note and the handoff are written and the diff has had
+    its last read, so they are checked too (see *A clean repository*). Never push without
+    explicit approval for that specific push, and never tag without approval for that tag.
 11. **Review.** The human runs a code review over the session's commit at high effort, in the
     same chat (in Claude Code, `/code-review high`); after parallel parts it covers the
     contract, the parts' commits and the merges too. In the round's last session that is the
@@ -560,11 +560,15 @@ conflict at every merge, so only the coordinator writes them, at integration.
   them: the session table marks a milestone's version as tagged. The session that cuts it asks
   before tagging; on a yes it tags locally, and the tag is pushed only with its own approval.
 
-## Nothing private in the repository
+## A clean repository
 
 Every repository is written as if its history will be published, because any of them may be,
-and the history is the one part that cannot be cleaned afterwards without rewriting it. Every
-file, test, fixture, done-note, handoff and commit message follows these rules:
+and the history is the one part that cannot be cleaned afterwards without rewriting it. It
+holds nothing private, nothing a script can tell is broken, and nothing a change has left
+behind: a gate holds what a script can judge, and a last read of each diff holds the rest.
+
+**Nothing private.** Every file, test, fixture, done-note, handoff and commit message follows
+these rules:
 
 - **No personal names, no names of the owner's other projects or games, no agent personas.**
   Write the role: "the owner", "the first game", "the coding agent".
@@ -586,11 +590,26 @@ the owner publishes on purpose, such as the copyright holder in the licence or a
 intake decides what is private, and which git identity the commits use: the stage below reads
 files and messages, not author fields.
 
-**The hygiene stage of `verify` enforces the rules.** It checks every file, path and commit
-message, the drafted one included, against the owner's term list, and every commit message for
-AI attribution. Session 1 builds it in the project's own language, from the design in the
-workflow kit's `KICKOFF.md`, which Session 0 copies into Session 1's block; from then on the
-stage's code holds the design, and ARCHITECTURE's testing strategy describes it.
+**The hygiene stage of `verify` is the gate.** It holds only what a script decides with next
+to no false alarms, because a check that blocks a session for nothing teaches sessions to route
+around the gate. Each check names the failure it catches, and a hit on any of them fails the
+stage:
+- **Private terms,** from the owner's term list, in the files, paths and messages it reads.
+- **AI attribution** in commit messages: a co-author trailer, a line saying an AI tool generated
+  the work, a link to an AI session.
+- **Secrets:** a private-key header, an access token in the exact shape its issuer gives it
+  (AWS, GitHub, Slack, Anthropic, OpenAI), and a tracked `.env` file (`.env.example` is fine).
+  A key in a pushed commit stays in history after it is revoked. The shapes are exact because
+  loose ones raise false alarms: a bare `sk-` prefix matches inside hyphenated names, and a
+  `github_pat_` prefix matches test fixtures. For the same reason there is no generic `key=`
+  pattern.
+- **Conflict markers:** a line that starts with `<<<<<<< ` or `>>>>>>> `, left by a merge
+  resolved by hand. In code they break the build, but in a document nothing else notices them.
+  `=======` alone is not one: Markdown underlines headings with it.
+
+Session 1 builds the stage in the project's own language, from the design in the workflow
+kit's `KICKOFF.md`, which Session 0 copies into Session 1's block; from then on the stage's
+code holds the design, and ARCHITECTURE's testing strategy describes it.
 - **The term list lives outside every repository,** in one plain-text file,
   `~/.config/hygiene/terms.txt`: one word per line, shared by all of the owner's projects,
   because a name private in one is private in all. No repository holds the terms, nor hashes
@@ -599,23 +618,59 @@ stage's code holds the design, and ARCHITECTURE's testing strategy describes it.
   what is already public.
 - **A term is one word.** A two-word or hyphenated name is given as its words, leaving out any
   that is an ordinary word on its own. The owner edits the file, or names a new term in chat
-  and the session adds it with their yes.
-- **A hit never prints the term.** It names the file and line, or the commit and message line;
-  the line itself shows which word it is.
+  and the session adds it with their yes. Either way, each project's next run reads everything
+  again (below), so a new term needs no further step.
+- **A hit never prints the term or the secret.** It names the file and line, or the commit and
+  message line; the line itself shows what it is.
+
+**What each run reads.** Rereading what already passed finds nothing new, so a run reads only
+what could still change:
+- the drafted message;
+- the commits on no remote yet (`git log HEAD --not --remotes`), which also covers a branch
+  with no upstream, such as a part's; with no remote at all, every commit, which is little
+  before the first push;
+- the files the commit could record: each path that differs from `HEAD` in the index or in
+  the working tree, read in both, since they can differ, and each untracked file that is not
+  ignored, so a new file is checked before it is staged.
+
+**The full scan reads every file and every commit message.** It runs only when it can find
+something new, and the stage tells when that is: it keeps a stamp in the git directory, beside
+`COMMIT_DRAFT` and never committed, and scans in full when the stamp is missing or older than
+the term list or the stage's own code. So Session 1's first run, a fresh clone, a part's new
+checkout, a term added in any project and a changed check each bring one full scan, without
+anyone having to remember it. `verify hygiene --all` runs one on demand. A hit in a file or in
+an unpushed message fails as usual. A hit in a pushed message is listed, and does not fail:
+history is never rewritten without the owner, so failing would only hold the gate red. The
+session tells the owner and records the listing in the handoff. The stamp is renewed after a
+full scan that does not fail.
 
 **When it runs: once, as the last act before each commit, message included.** The session
-writes the done-note and the handoff, drafts the commit message into the draft file
-`COMMIT_DRAFT` in the git directory (`"$(git rev-parse --git-dir)/COMMIT_DRAFT"`: `.git/` in a
-plain checkout, elsewhere in a worktree, never committed either way), runs `verify` with it
+writes the done-note and the handoff, reads its diff once more for what no script judges
+(below), drafts the commit message into the draft file `COMMIT_DRAFT` in the git directory
+(`"$(git rev-parse --git-dir)/COMMIT_DRAFT"`: `.git/` in a plain checkout, elsewhere in a
+worktree, never committed either way), runs `verify` with it
 (`<verify command> --message <draft>`, or the docs-only command for a commit that changes only
-docs), and commits with `git commit -F <draft>`. The draft is
-written fresh for every commit and deleted after it, so an old message is never committed
-again. The stage checks the draft beside the files and every earlier message, so nothing is
-checked after the fact and no commit is amended for it. The review commit and the push note's
-amend go the same way.
+docs), and commits with `git commit -F <draft>`. The draft is written fresh for every commit
+and deleted after it, so an old message is never committed again. The stage checks the draft
+beside the files and the unpushed messages, so nothing is checked after the fact and no commit
+is amended for it. The review commit and the push note's amend go the same way.
 
-**Watch for:** a commit message that quotes an attribution form, even to describe this rule,
-fails the stage. Describe it in words.
+**What no script judges.** That last read of the diff looks for what needs judgement:
+- the message says what changed and why, the way a reader of the product would put it (*Git*);
+- no dead code, and no code left commented out;
+- comments state the present (*Engineering practices*);
+- no file the change made obsolete stays;
+- the docs that describe the change are true (the cycle, step 7).
+
+A finding is fixed, or left with its reason in the done-note, like a review finding.
+
+**Watch for:**
+- **A commit message that quotes an attribution form,** even to describe this rule, fails the
+  stage. Describe it in words.
+- **A test that needs a token-shaped string or a conflict marker** builds it from pieces at run
+  time, as the stage's own source builds its patterns. A file that holds one fails the stage.
+- **A document that describes conflict markers** writes them inside a sentence, never at the
+  start of a line.
 
 ## Versions and the changelog
 
@@ -743,7 +798,8 @@ this repository* paragraph.
     review and a separate review commit;
   - pushes and tags only with approval;
   - every new check falsified;
-  - nothing private in the repository, enforced by the hygiene stage.
+  - a clean repository: nothing private, no secret and no conflict marker, enforced by the
+    hygiene stage.
 - **What depends on the project:**
   - what `verify` runs, and which harnesses exist beside it;
   - whether every session cuts a version and a CHANGELOG entry, or the project releases at

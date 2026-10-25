@@ -33,7 +33,7 @@ list what it leaves underdetermined, including at least:
 - **Names.** The product's name, and the machine identifiers (package name, storage keys,
   bundle id) that must never change once data exists under them.
 - **Privacy.** Every repository is written as if its history will be published (the workflow's
-  *Nothing private in the repository*). Ask what is private beyond what is already public: my
+  *A clean repository*). Ask what is private beyond what is already public: my
   name and email are on every commit as its author, so they count only if the commits use
   another identity. Ask about other people, my unannounced projects or games, agent personas,
   and what I publish on purpose (a copyright holder, a bundle id). The answer may be nothing.
@@ -109,7 +109,9 @@ Session 1's block also takes *The hygiene stage's design*, below.
 
 ## Step 3: close Session 0
 
-- `git init` if needed, with a `.gitignore` suited to the stack.
+- `git init` if needed, with a `.gitignore` suited to the stack that also keeps out what the
+  OS, editors and merges leave behind: `.DS_Store`, `Thumbs.db`, `*.swp`, `*~`, `*.orig` and
+  `*.rej`.
 - Before the first commit, confirm `~/.claude/settings.json` has `"includeCoAuthoredBy": false`
   and `"attribution": { "commit": "", "pr": "" }`, so no commit or PR carries a Claude co-author
   line. If either is missing, tell me before committing. The settings keep attribution out at
@@ -118,7 +120,8 @@ Session 1's block also takes *The hygiene stage's design*, below.
   term list. An empty list passes with nothing to check, so test for it first: some greps,
   ugrep among them, match every line against an empty pattern file.
   `[ ! -s ~/.config/hygiene/terms.txt ] || grep -n -i -w -f ~/.config/hygiene/terms.txt <files>`
-  The hygiene stage does not exist yet; Session 1's first run checks this commit too.
+  The hygiene stage does not exist yet. Its first run in Session 1 is a full scan, since it has
+  no stamp yet, so it checks this commit too.
 - Commit locally with explicit paths: `docs: open round 1 — <product>`. Do not add a remote and
   do not push unless I ask.
 - I run `/code-review high` on the commit. It checks the spec and the plan for contradictions,
@@ -137,7 +140,8 @@ Session 1's block also takes *The hygiene stage's design*, below.
 
 Session 1 builds the stage in the project's own language. Copy this design into Session 1's
 block as the stage's scope, and its last item into the block's gates; each part closes a gap
-someone found.
+someone found. What the stage checks and why is the workflow's *A clean repository*; this is
+how it is built.
 
 - **The terms come from `~/.config/hygiene/terms.txt`,** never from the repository: a hash of
   a short word is reversed by hashing a dictionary of names, so not even hashes go in. A
@@ -149,26 +153,66 @@ someone found.
   inside each run, read before lowercasing, so a term in `myTermNotes` or `term2026` is still
   found. Terms and tokens alike are normalised to NFC and lowercased before they are compared,
   so a letter such as й matches however it was encoded.
-- **It reads everything a commit could record:** the paths and contents of tracked files, of
-  untracked files that are not ignored (so a new file is checked before it is staged), and of
-  staged contents read from the index, which can differ from the working tree. Files containing
-  NUL are skipped as binary, and submodule entries are skipped.
-- **It reads the drafted commit message** (`--message <file>`) **and every message reachable
-  from `HEAD`**, for the terms and for attribution: a co-author trailer, a line saying an AI
-  tool generated the work, a link to an AI session. The patterns name the tools, so "generated
-  with the codegen script" passes. A repository with no commits yet passes.
+- **A routine run reads what a commit could still change:** the path and contents of each path
+  that differs from `HEAD` in the index or the working tree, both versions, since they can
+  differ; untracked files that are not ignored, so a new file is checked before it is staged;
+  the drafted commit message (`--message <file>`); and the messages of the commits on no remote
+  (`git log HEAD --not --remotes`), which is every commit when there is no remote. Files
+  containing NUL are skipped as binary, and submodule entries are skipped. A repository with no
+  commits yet passes.
+- **A full scan reads everything:** every tracked file and every untracked one that is not
+  ignored, the staged contents of every path, and every message reachable from `HEAD`. It runs
+  when `--all` is given, or when the stamp `"$(git rev-parse --git-dir)/hygiene-scanned"` is
+  missing or older than the term list or the stage's own source. The stamp holds nothing: its
+  modification time is the record. A hit in a file or in a commit on no remote fails; a hit in
+  a pushed commit is listed under a heading of its own and does not fail. The stamp is renewed
+  after a full scan that does not fail. Tests build scratch repositories and never read or touch
+  the real stamp.
+- **Attribution is checked in messages:** a co-author trailer, a line saying an AI tool
+  generated the work, a link to an AI session. The patterns name the tools, so "generated with
+  the codegen script" passes.
+- **Secrets have exact shapes,** each bounded by characters that cannot belong to it:
+  - a private-key header: `-----BEGIN `, any words, then `PRIVATE KEY-----`;
+  - an AWS access key id: `AKIA` or `ASIA`, then 16 capital letters or digits;
+  - a GitHub token: `ghp_`, `gho_`, `ghu_`, `ghs_` or `ghr_`, then 36 letters or digits; or
+    `github_pat_`, 22 letters or digits, `_`, then 59 more;
+  - a Slack token: `xoxb-`, `xoxp-`, `xoxa-`, `xoxr-` or `xoxs-`, a group of digits, `-`, then
+    more;
+  - an Anthropic key: `sk-ant-`, a kind and two digits, `-`, then 80 or more letters, digits,
+    `_` or `-`;
+  - an OpenAI key: `sk-proj-`, `sk-svcacct-` or `sk-admin-`, then 40 or more letters, digits,
+    `_` or `-`; or `sk-` and exactly 48 letters or digits;
+  - a tracked file named `.env` or `.env.<anything>`, except `.env.example`, `.env.sample` and
+    `.env.template`.
+
+  A dry run over real repositories found two families of false alarms in looser shapes and none
+  in these: a bare `sk-` inside hyphenated names, and a `github_pat_` prefix in test fixtures.
+- **Conflict markers:** a line that starts with seven `<` or seven `>` and a space. A line of
+  seven `=` alone is not one; it underlines a Markdown heading.
 - **It never holds what it bans.** The attribution patterns are assembled from pieces, so the
-  stage's own source does not match them.
-- **A hit never prints the term.** It names the file and line, or the commit and message line.
+  stage's own source does not match them. Tests build their token-shaped strings and conflict
+  markers from pieces at run time, so no file in the repository holds one.
+- **A hit never prints the term or the secret.** It names the file and line, or the commit and
+  message line.
 - **What it cannot see** goes into the spec's verification strategy: images and other
   binaries, their metadata included; a term joined to another word inside one lowercase run
-  (matching every substring instead would flag ordinary words that contain a short term); and
+  (matching every substring instead would flag ordinary words that contain a short term);
   attribution in files, which is checked only in messages, because a document stating this
-  rule would match it.
-- **Each part is falsified once:** a missing file fails and an empty one passes; a Cyrillic
-  term is found, and so is the same term in NFD; `myTermNotes` and `term2026` are found; a term
-  or a co-author trailer in the drafted message fails; "generated with the codegen script"
-  passes.
+  rule would match it; and a secret of any shape not listed.
+- **Each part is falsified once:**
+  - a missing term file fails and an empty one passes;
+  - a Cyrillic term is found, and so is the same term in NFD; `myTermNotes` and `term2026` are
+    found;
+  - a term or a co-author trailer in the drafted message fails; "generated with the codegen
+    script" passes;
+  - each secret shape and a tracked `.env` fail; `.env.example`, a hyphenated name containing
+    `sk-` and a `github_pat_TEST` fixture pass;
+  - a conflict marker fails; a heading underline passes;
+  - a change left unstaged is read; a routine run reads a commit on no remote and skips a
+    pushed one;
+  - a missing stamp, or a term list touched after it, turns a routine run into a full scan;
+    in a full scan, a hit in a pushed message is listed and passes, and a hit in a file fails
+    and leaves the stamp as it was.
 
 ## `docs/spec/SPEC.md` template
 
@@ -257,8 +301,8 @@ Each is a rule, not a preference. *Enforced by* names what fails when it breaks.
    check>.
 <n>. **Nothing private enters the repository** (decision <n>). *Why:* any repository may be
    published, and history cannot be cleaned without a rewrite. *Enforced by* the hygiene stage:
-   the owner's term list against every file, path and commit message, and attribution against
-   every commit message.
+   the owner's term list against every file, path and commit message, attribution against
+   every commit message, and secrets by their exact shapes.
 
 A decision the user changes later is added under its invariant as an **Amended <YYYY-MM-DD> by
 the user** note; the wording above it stays.
@@ -272,7 +316,7 @@ docs runs `<the docs-only command>`, the stages that read docs.
 | Layer | Runs | Covers | Cannot see |
 |---|---|---|---|
 | Unit | `verify` | <…> | <…> |
-| Hygiene | `verify`, with the drafted commit message | Private terms in files, paths and messages; attribution in messages | Images and binaries; a term joined inside one lowercase run; attribution in files |
+| Hygiene | `verify`, with the drafted commit message; in full when the term list or the stage changes | Private terms in files, paths and messages; attribution in messages; secrets by their exact shapes; conflict markers | Images and binaries; a term joined inside one lowercase run; attribution in files; a secret of any other shape |
 | <Harness> | <the sessions that run it> | <…> | <…> |
 | Architecture reviews | Sessions <ids> | The code against this file | Runtime behaviour |
 | By hand | Recorded in done-notes | <…> | Anything not written down; what nobody checked goes to the backlog |
@@ -378,9 +422,10 @@ commit message follows these rules:
   private goes on the term list.
 
 <What the owner publishes on purpose, e.g. the copyright holder and the bundle id.> The
-hygiene stage of `verify` (`<hygiene command>`) checks every file, path and commit message
-against the term list in `~/.config/hygiene/terms.txt`, outside the repository, and every
-commit message for attribution.
+hygiene stage of `verify` (`<hygiene command>`) checks what a commit records, its message and
+the commits not yet pushed: against the term list in `~/.config/hygiene/terms.txt`, outside the
+repository, for attribution in messages, for secrets and for conflict markers. It reads every
+file and message once after the term list or the stage changes.
 
 ## Commands
 
@@ -388,6 +433,7 @@ commit message for attribution.
 |---|---|
 | <filled in by Session 1> | |
 | `<the docs-only command>` | The stages that read docs, for a commit that changes only docs: hygiene, plus <the format check and lint, where they cover them> |
+| `<verify command> hygiene --all` | Hygiene's full scan: every file and every commit message. It runs by itself after the term list or the stage changes; a hit in a pushed commit is listed for the owner and does not fail |
 
 <Below the table, what a session would otherwise learn the hard way about running them: what
 the unit tests cannot see and which harness can; that no harness touches a person's real data;
@@ -402,8 +448,9 @@ runs them; the session's integration does.
 - Commit locally; a push or tag needs explicit approval, each time. Before any push, list
   `git log origin/main..HEAD`; parallel sessions may share this checkout.
 - Stage explicit paths, never `git add -A`. Never undo with `git checkout <path>`.
-- As the last act before each commit, after the done-note and the handoff: draft the message
-  into `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `<verify command> --message` with it
+- As the last act before each commit, after the done-note, the handoff and a last read of the
+  diff for what no script judges (the workflow's *A clean repository*): draft the message into
+  `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `<verify command> --message` with it
   (`<the docs-only command>` for a commit that changes only docs), commit with `git commit -F`
   from it, then delete it. The message is checked before it exists in history.
 
