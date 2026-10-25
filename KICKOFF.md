@@ -36,8 +36,8 @@ list what it leaves underdetermined, including at least:
   already public, and which git identity the commits use. Ask about other people, my
   unannounced projects or games, agent personas, and what I publish on purpose (a copyright
   holder, a bundle id). The answer may be nothing. Check `~/.config/hygiene/terms.txt` exists
-  (empty is fine), create it with my yes if it does not, and add any new term I name, with my
-  yes.
+  (empty is fine); creating it if it does not, and adding any new term I name, go into the
+  plan.
 
 Ask me in small batches. For every question, give your recommended answer and one line on why,
 so I can accept it quickly. Where the PDD contradicts itself, ask which part wins. Do not
@@ -46,8 +46,9 @@ move to step 2 until every open item is answered or explicitly deferred.
 ## Step 2: write the round-1 documents
 
 This chat runs in plan mode like every session: once the intake is done, propose the documents
-below as your plan, and write them when I approve it. Use the templates at the end of
-`DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file, for every file that has one.
+below, and the term-list changes from step 1, as your plan, and write them when I approve it.
+Use the templates at the end of `DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file,
+for every file that has one.
 
 1. **`docs/spec/PDD.md`**: the draft as I gave it, frozen, with two edits only: private details
    are replaced by roles ("the owner", "the first game"), and lines crediting or addressing an
@@ -80,7 +81,7 @@ below as your plan, and write them when I approve it. Use the templates at the e
      - anything still open moved to `docs/BACKLOG.md`;
      - then, after its review, the separate `docs: close round 1` commit.
 4. **`CLAUDE.md`**, from the template below, filled in from the spec. Keep it lean: rules that
-   are always true, not history. Seed its *Do not* section with the standing traps already
+   are always true, not history. Seed its *Watch for* section with the standing traps already
    known: `< /dev/null` for any shell command that reads stdin, and what the intake learned
    about this machine, such as where the toolchain lives.
 5. **`docs/DEVELOPMENT-WORKFLOW.md`**: a verbatim copy of the file I gave you. If the intake
@@ -150,12 +151,12 @@ how it is built.
   ignored, the staged contents of every path, every message reachable from `HEAD`, and the
   draft. It runs when `--all` is given, or when the stamp
   `"$(git rev-parse --git-common-dir)/hygiene-scanned"` is missing or older than the term list
-  or the stage's own source; the common directory is shared by a repository's worktrees, so a
-  part's checkout does not scan again. The stamp holds nothing: its modification time is the
-  record. A hit in a file, in the draft or in a commit on no remote fails. A hit in a pushed
-  commit does not fail, and the stage's output ends with a line of its own counting them. The
-  stamp is renewed after a full scan that does not fail. Tests build scratch repositories and
-  never read or touch the real stamp.
+  or the stage's own source. A new checkout writes the source anew, so the first run in a
+  part's checkout may scan in full; the shared stamp then serves the rest. The stamp holds
+  nothing: its modification time is the record. A hit in a file, in the draft or in a commit on
+  no remote fails. A hit in a pushed commit does not fail, and the stage's output ends with a
+  line of its own counting them. The stamp is renewed after a full scan that does not fail.
+  Tests build scratch repositories and never read or touch the real stamp.
 - **Attribution is checked in messages,** in the forms the workflow lists. The patterns name
   the tools, so "generated with the codegen script" passes.
 - **Secrets have exact shapes,** each bounded by characters that cannot belong to it:
@@ -185,7 +186,7 @@ how it is built.
   binaries, their metadata included; a term joined to another word inside one lowercase run
   (matching every substring instead would flag ordinary words that contain a short term);
   attribution in files, which is checked only in messages, because a document stating this
-  rule would match it; and a secret of any shape not listed.
+  rule would match it; a home-directory path; and a secret of any shape not listed.
 - **Each part is falsified once:**
   - a missing term file fails and an empty one passes;
   - a Cyrillic term is found, and so is the same term in NFD; `myTermNotes` and `term2026` are
@@ -303,7 +304,7 @@ then a summary. <The stages>, then hygiene. Green before every commit, or
 | Layer | Runs | Covers | Cannot see |
 |---|---|---|---|
 | Unit | `verify` | <…> | <…> |
-| Hygiene | `verify`, with the drafted commit message; in full when the term list or the stage changes | Private terms in files, paths and messages; attribution in messages; secrets by their exact shapes; conflict markers | Images and binaries; a term joined inside one lowercase run; attribution in files; a secret of any other shape |
+| Hygiene | `verify`, with the drafted commit message; in full when the term list or the stage changes | Private terms in files, paths and messages; attribution in messages; secrets by their exact shapes; conflict markers | Images and binaries; a term joined inside one lowercase run; attribution in files; a home-directory path; a secret of any other shape |
 | <Harness> | <the sessions that run it> | <…> | <…> |
 | Architecture reviews | Sessions <ids> | The code against this file | Runtime behaviour |
 | By hand | Recorded in done-notes | <…> | Anything not written down; what nobody checked goes to the backlog |
@@ -402,8 +403,9 @@ commit message follows these rules:
   private goes on the term list.
 
 <What the owner publishes on purpose, e.g. the copyright holder and the bundle id.> The
-hygiene stage of `verify` (`<hygiene command>`) enforces these, against the term list in
-`~/.config/hygiene/terms.txt`.
+hygiene stage of `verify` (`<hygiene command>`) checks the term list in
+`~/.config/hygiene/terms.txt`, attribution in messages, secrets and conflict markers; the last
+read of each diff covers the rest of this list.
 
 ## Commands
 
@@ -432,15 +434,15 @@ runs them; the session's integration does.
   (`<the docs-only command>` for a commit that changes only docs), commit with `git commit -F`
   from it, then delete it. The message is checked before it exists in history.
 
-## Do not
+## Watch for
 
-One line each. A trap goes in once it has cost a session time, and comes out once a check, a
-script or a pin makes it impossible.
+The standing traps and forbidden moves, a line or two each: the trap, then what to do instead.
+One goes in when the intake knows it or once it has cost a session time, and comes out once a
+check, a script or a pin makes it impossible.
 
-- <Stack-specific traps and forbidden moves, e.g. editing an applied migration, upgrading a
-  pinned dependency in passing, touching a person's real data from a test, renaming a machine
-  identifier.>
-- <The environment's standing traps, e.g. give a shell command that reads stdin `< /dev/null`;
+- <Forbidden moves, e.g. editing an applied migration, upgrading a pinned dependency in
+  passing, touching a person's real data from a test, renaming a machine identifier.>
+- <The environment's traps, e.g. a shell command that reads stdin hangs without `< /dev/null`;
   where the toolchain lives.>
 - Do not finish with `<verify command>` red, or with user-visible changes missing from
   `CHANGELOG.md`.

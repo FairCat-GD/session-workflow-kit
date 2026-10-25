@@ -84,8 +84,9 @@ However it starts, it goes through an intake.
    block has:
    - its **Read** line: exactly what the session reads of the spec files, `ARCHITECTURE.md` and
      any review, by number and by name (decisions, invariants, the draft's parts and items,
-     sections, findings). The intake has read everything, so it is the one placed to say what
-     each session needs;
+     sections, findings), plus any section of this file beyond the cycle that the session
+     builds from, such as Session 1's *Day one*. The intake has read everything, so it is the
+     one placed to say what each session needs;
    - its **Scope**, pointing at the files and lines it changes where the intake could see them;
    - its **Docs**: which documents it keeps true, and how;
    - its **Gates**: `verify`, the tests it must add, and the harnesses it must run;
@@ -125,11 +126,12 @@ However it starts, it goes through an intake.
      version even when its own work is documentation, so every round ends on a version a person
      can name and a milestone's tag can mark. A project that releases at milestones cuts one
      only when the round ends on a milestone.
-   - **The close comes last, after the review.** The release commit and its `review:` commit
-     come first, with the last done-note complete in them. Then a separate
-     `docs: close round <N>` commit deletes `docs/spec/`'s files and rewrites the handoff to
-     say no round is in progress. Git history keeps the specs; the review commit is where the
-     last done-note can still be read in full, and the handoff names that commit.
+   - **The close comes last, after the review.** The round's last session writes the
+     between-rounds handoff as its handoff (the cycle, step 9), so the review covers it. The
+     release commit and its `review:` commit come first, with the last done-note complete in
+     them. Then a separate `docs: close round <N>` commit deletes `docs/spec/`'s files and fills
+     in the handoff's sha of the review commit, where the last done-note can still be read in
+     full. Git history keeps the specs.
    - **Round 1 also owes a documentation pass**, planned as a real session, usually its last:
      - `docs/ARCHITECTURE.md` (the system as built, the invariants, the deliberate
        decisions, the known debt, a baseline table of counts);
@@ -177,12 +179,13 @@ one-line opener the previous session printed (step 12). It points at the handoff
 the repository.
 
 1. **Entry gate.** The tree is clean, `docs/next-session-prompt.md` names the session you are
-   about to do, and, unless this is the round's first session, the previous session's block in
+   about to do, and, unless this block is the plan's first, the previous session's block in
    `SESSIONS.md` has its done-note. If it does not, that session did not finish; do not stack
    on it. A session the handoff says paused at integration is the exception: it resumes, and
    its open parts, named in the handoff, stay. Then, where the previous done-note has a
    *Parts* section, check that nothing it names was left behind (*Parallel parts*, integration
-   step 6).
+   step 6). An intake reads that done-note as of the review commit its handoff names
+   (`git show <sha>:docs/spec/SESSIONS.md`).
 2. **Read in order** (the handoff's first line copies this order, so the rest of the handoff
    comes last):
    - what the block's **Read** line names, in full;
@@ -241,7 +244,9 @@ the repository.
    - what was measured, and what was checked by hand, with the outcome of each;
    - what was falsified;
    - the numbers, with their deltas.
-9. **Handoff.** Rewrite `docs/next-session-prompt.md` for the next session.
+9. **Handoff.** Rewrite `docs/next-session-prompt.md` for the next session (*The handoff*;
+   templates at the end). In the round's last session that is an intake, so it is the
+   between-rounds handoff (see *Rounds*).
 10. **Commit locally**: one commit for the session's work. A session that ran parallel parts
     has its contract, the parts' commits and the merges before it (see *Parallel parts*). The
     last act before each commit is `verify` run with its drafted message (*A clean
@@ -258,7 +263,8 @@ the repository.
     - update that version's CHANGELOG entry and the docs the fixes touched (no new version);
     - update the handoff for anything the review changed, including a session it opened;
     - commit the fixes as a separate `review:` commit;
-    - in the round's last session, then make the close commit (see *Rounds*).
+    - in the round's last session, unless the review opened a session, then make the close
+      commit (see *Rounds*).
 
     Expect it to find something; the worst finds are routinely in code the session had just
     called safe.
@@ -269,7 +275,7 @@ the repository.
     `Read docs/next-session-prompt.md: no round is in progress, so the next session is an intake.`
     If the human then approves a push, follow *Git*: the handoff's push note is folded into the
     last commit before it goes, so the push adds no commit. Print the opener again after the
-    push. The chat ends there.
+    push. A milestone's tag comes after all of that (*Git*). The chat ends there.
 
 The session is the human's review unit. Between sessions they read the diff and try the build,
 and work that runs past the boundary arrives unreviewed and too large to judge.
@@ -410,8 +416,9 @@ conflict at every merge, so only the coordinator writes them, at integration.
    documents (no part touches those, and they wait for the session commit), in a stated
    order, one `--no-ff` merge per part, so history keeps each part visible. A merge is a
    commit like any other: `git merge --no-ff --no-commit <branch>`, a typed message drafted
-   (`merge: part 8.1 — <what it adds>`), `verify` run with it, then `git commit -F`. A conflict
-   stops the merge and goes to the human; it is never resolved by a guess.
+   (`merge: part 8.1 — <what it adds>`), `verify` run with it, then `git commit -F`. A conflict,
+   or a red `verify` on the merge, aborts it (`git merge --abort`) and goes to the human; it is
+   never resolved by a guess.
 4. **Prove the seam, then run the full gates once, on the combined code.** First add the
    end-to-end tests the briefs left to integration. Then run `verify`, every harness the block
    names, and the exclusive harnesses the parts could not run. The baseline counts must equal
@@ -431,10 +438,9 @@ conflict at every merge, so only the coordinator writes them, at integration.
    done-note's *Parts* section. A branch kept after a refusal here is recorded there by the
    review commit, which adds to the done-note anyway. The next session's entry gate checks
    that nothing else is left: the branches the *Parts* section names (the parts' and any
-   contract change's) and their checkouts are gone (`git branch`, `git worktree list`). An
-   intake finds that done-note in the review commit its handoff names
-   (`git show <sha>:docs/spec/SESSIONS.md`). What remains is removed the same way, what git
-   refuses goes to the human, and a branch listed as kept stays. A branch or checkout no
+   contract change's) and their checkouts are gone (`git branch`, `git worktree list`). What
+   remains goes into the session's plan and is removed the same way once the plan is approved;
+   what git refuses goes to the human, and a branch listed as kept stays. A branch or checkout no
    done-note names is not the session's to remove: leave it.
 
 **Limits.**
@@ -454,9 +460,12 @@ Each commit's subject is in *Git*.
 | **Contract** for a session's parts | the interfaces the parts meet at, as code: types, signatures and stubs that fail if called | the shared registries, with the entries the parts would each add, pointing at the stubs | — |
 | **Part** of a session | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
 | **Session** | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
+| **Before the merges**, the coordinator's own step while parts run | the code and tests of a step no part touches | its own stubs, filled in from the contract | — |
+| **Merge** of a part, or of a contract change | the branch's commits, as one `--no-ff` merge, with the human's resolution of any conflict, and nothing else | — | — |
+| **Paused at integration** | — | the handoff, naming the open parts and their branches | — |
 | **Review** | the fixes and their tests; the done-note's Review section | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
 | **Architecture review** | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
-| **Close**, after the round's last review | — | the handoff, which now says no round is in progress | every file in `docs/spec/` |
+| **Close**, after the round's last review | — | the handoff, with the sha of the review commit | every file in `docs/spec/` |
 
 - **An intake's review** fixes the spec and the plan. It has no CHANGELOG entry and no version.
   Neither has an architecture review, whose `/code-review` follows like any session's.
@@ -528,7 +537,9 @@ Each commit's subject is in *Git*.
   else.
 - **Tags mark milestones only**, such as a first build for testers or 1.0, and the intake names
   them: the session table marks a milestone's version as tagged. The session that cuts it asks
-  before tagging; on a yes it tags locally, and the tag is pushed only with its own approval.
+  before tagging; on a yes it tags locally as the chat's last act before its final opener,
+  after the review, the close and any approved push, so the tag holds the review's fixes and no
+  amend moves the commit from under it. The tag is pushed only with its own approval.
 
 ## A clean repository
 
@@ -625,7 +636,9 @@ is amended for it. The review commit and the push note's amend go the same way.
 - no dead code, and no code left commented out;
 - comments state the present (*Engineering practices*);
 - no file the change made obsolete stays;
-- the docs that describe the change are true (the cycle, step 7).
+- the docs that describe the change are true (the cycle, step 7);
+- nothing private the stage cannot see: a home-directory path, attribution in a file, the
+  owner's data.
 
 A finding is fixed, or left with its reason, like a review finding: in the done-note, or in the
 commit message where there is none (an intake and its review, or the close).
@@ -683,9 +696,8 @@ as committed. It holds:
   - what was not done, and why.
 - **Watch for:** this session's own traps, the block's plus anything newly discovered. The
   standing traps, the environment's gotchas that every session hits (the shell, the toolchain,
-  the harnesses, git), live in `CLAUDE.md`'s *Do not* section instead, one line each: added
-  once one has cost a session time, removed once a check, a script or a pin makes it
-  impossible.
+  the harnesses, git), live in `CLAUDE.md`'s *Watch for* section instead, which says when one
+  goes in and when it comes out.
 
 Two rules govern it:
 
@@ -734,9 +746,8 @@ and the next session is an intake.
   a review story; git history and the done-notes keep those. Where the story *is* the reason,
   keep one clause.
 - **"Watch for" lines.** Every session block ends with its specific traps, because traps are
-  what a fresh context misses. When a trap costs a session an hour anyway, it goes into
-  `CLAUDE.md`'s *Do not* section if every session can hit it, or into the next prompt if only
-  the next session will.
+  what a fresh context misses; a trap every session can hit goes into `CLAUDE.md` instead (*The
+  handoff*).
 - **Deviations over corrections.** When mockups, spec and build disagree, resolve the conflict
   once, write down which one wins and why, and leave the artifacts as they are.
 - **Keep the rules file lean.** `CLAUDE.md` holds what is always true; the done-notes and
@@ -815,7 +826,8 @@ they gave them.>
 
 **Read:** `<spec file>` <decisions and invariants by number, sections by name>; `PDD.md`
 <parts and items, in round 1>; `ARCHITECTURE.md` <sections>; `REVIEW-<date>.md` <findings,
-where a review amended this block>.
+where a review amended this block>; `DEVELOPMENT-WORKFLOW.md` <sections beyond the cycle it
+builds from>.
 
 - **<Scope item>** (decision <n>).
   - <What changes, with `file:line` pointers to the code as the intake saw it.>
@@ -1067,8 +1079,8 @@ Decided by the user in plan mode, <YYYY-MM-DD>:
 ```markdown
 Read <the block's Read line, copied>, CLAUDE.md, *The session cycle* in
 docs/DEVELOPMENT-WORKFLOW.md, docs/ARCHITECTURE.md's overview, invariants and baseline (once it
-exists), your block in docs/spec/SESSIONS.md and the previous block's done-note, then this
-file, and do Session <id>: <one line>. <id> covers:
+exists), docs/spec/SESSIONS.md's header, your block and the previous block's done-note, then
+this file, and do Session <id>: <one line>. <id> covers:
 - <part>;
 - <part>.
 
@@ -1109,7 +1121,7 @@ and plan the round in `docs/spec/`, a Read line in every block (see
 
 - **<Product> <x.y.z> is released.** Round <N> (<theme>: <ids>) is closed. Its spec files are
   deleted; the last done-note is in `docs/spec/SESSIONS.md` as of the review commit before the
-  close (`<sha>`).
+  close (`<sha>`, filled in by the close).
 - **Push status:** <what the remote holds, and what waits for the next approved push>.
 - **Open items live in `docs/BACKLOG.md`**, <including what this round added there>.
 - **Baseline** (ARCHITECTURE's table, v<x.y.z>): <the counts>.
