@@ -39,12 +39,12 @@ Everything needed to start a new project under this session-based workflow.
 
 After you approve a plan, the session checks whether parts of it could run in parallel. If any
 could, it tells you which ones, why, where they meet, and what the split would cost, then asks.
-On a yes, it commits the interfaces the parts meet at, and each part runs in a chat of its own,
-cut from that commit. A part's questions go to the session first: it answers what the approved
-plan already settles, and brings you anything that changes behaviour, scope or where the parts
-meet. The session merges the parts only with your yes, removes their branches and checkouts,
-and you review it all as one session. This is *Parallel parts* in `DEVELOPMENT-WORKFLOW.md`,
-tried once so far.
+On a yes, where parts meet it first commits the interfaces between them, and each part runs in
+a chat of its own, cut from there. A part's questions go to the session first: it answers what
+the approved plan already settles, and brings you anything that changes behaviour, scope or
+where the parts meet. The session merges the parts only with your yes, removes their branches
+and checkouts, and you review it all as one session. This is *Parallel parts* in
+`DEVELOPMENT-WORKFLOW.md`, tried once so far.
 
 When a round is finished, the printed line says so and the next chat is an intake: paste it,
 then say what you want next.

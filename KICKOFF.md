@@ -340,9 +340,9 @@ the prompt. The Read line is a floor: read further where the code leads.
 
 1. `<verify command>` (typecheck + lint + format check + tests + hygiene) must be green before
    you commit. A commit that changes only docs runs `<the docs-only command>` instead; one that
-   changes code, a test, a fixture, a config or the manifest runs it all. Run the heavier
-   harnesses (`<harness commands>`) when your change could affect what they cover; expected
-   results are in ARCHITECTURE.md's baseline table.
+   changes code, a test, a fixture, a config, the manifest or a doc a test reads runs it all.
+   Run the heavier harnesses (`<harness commands>`) when your change could affect what they
+   cover; expected results are in ARCHITECTURE.md's baseline table.
 2. Falsify any new check before trusting it: break the assertion, watch it fail at its own
    step, restore it.
 3. User-visible changes get a line in `CHANGELOG.md`. Version is `major.minor.fix` in

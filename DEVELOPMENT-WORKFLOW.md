@@ -156,7 +156,8 @@ Each of these is cheap on day one and expensive to retrofit.
 - **The hygiene stage** (see *Nothing private in the repository*), reading the owner's term
   list. Its first run checks the whole history, Session 0's commit included.
 - **The gate is held by the session and the human; there is no CI.** `verify` is green before
-  every commit, the human reviews every session, and nothing reaches the remote without their
+  every commit (only the docs stages, for a commit that changes only docs), the human reviews
+  every session, and nothing reaches the remote without their
   approval.
 - **Version and changelog.** Stamp `0.1.0` in the manifest, surface it in the product, and
   start `CHANGELOG.md` from the template, with an empty `[Unreleased]` section.
@@ -184,10 +185,13 @@ the repository.
 1. **Entry gate.** The tree is clean, `docs/next-session-prompt.md` names the session you are
    about to do, and, unless this is the round's first session, the previous session's block in
    `SESSIONS.md` has its done-note. If it does not, that session did not finish; do not stack
-   on it. If that done-note has a *Parts* section, check that the part branches it names and
-   their checkouts are gone (`git branch`, `git worktree list`). Remove any that remain the way
-   integration does (*Parallel parts*, integration step 6), and take what git refuses to the
-   human. A branch or checkout no done-note names is not this session's: leave it.
+   on it. Then check that no parallel part was left behind: the part branches the last
+   done-note's *Parts* section names, and their checkouts, are gone (`git branch`,
+   `git worktree list`). An intake finds that done-note in the release commit its handoff names
+   (`git show <sha>:docs/spec/SESSIONS.md`). Remove any that remain the way integration does
+   (*Parallel parts*, integration step 6), and take what git refuses to the human; a branch the
+   done-note lists as kept stays. A branch or checkout no done-note names is not this
+   session's: leave it.
 2. **Read in order:**
    - what the block's **Read** line names, in full;
    - `CLAUDE.md`, which carries every invariant;
@@ -224,8 +228,10 @@ the repository.
    the block names (UI, end-to-end, runtime probes), and any other whose ground the change
    covers. Falsify every new check before trusting it. A commit that changes only docs runs
    only the stages that read what changed: the docs-only command in `CLAUDE.md`, which is
-   hygiene, plus the format check or lint where they cover docs. Tests never read the docs
-   (*Day one*), so the other stages have nothing new to check. A commit that changes anything
+   hygiene, plus the format check or lint where they cover docs. A file that a test or a build
+   reads, such as a README whose examples run as doctests, is not docs for this rule; no test
+   reads the rest (*Day one*), so the other stages have nothing new to check. A commit that
+   changes anything
    else (code, a test, a fixture, a config, the manifest) runs the full `verify`, and so does
    every merge.
 7. **Keep the docs true**, in the same commit as the code:
@@ -332,15 +338,19 @@ When in doubt, a step stays sequential. A wrong split costs more than the time i
 starts, and the parts are cut from that commit. It holds the interfaces as code (types,
 signatures, stubs that fail if called) and the shared-registry entries each part would
 otherwise add, pointing at those stubs, so each part's own checks, a type check above all, pass
-on its branch without anyone else's work. It is typed like any work commit, with no version,
-ending `(<id>, the parts' contract)`, and the full `verify` runs on its drafted message last.
-- **A part never takes in commits from outside its branch.** Cherry-picking the coordinator's
-  work puts the same patch in history twice. What a part lacks is a gap in the contract, and a
-  stop.
+on its branch without anyone else's work. Where an existing test already calls every entry of
+a registry, the stub returns the smallest valid result instead, so the full `verify` stays
+green. It is typed like any work commit, with no version, ending `(<id>, the parts' contract)`,
+and the full `verify` runs on its drafted message last.
+- **A part takes in nothing from outside its branch but a contract change** (below).
+  Cherry-picking the coordinator's work puts the same patch in history twice. What a part lacks
+  is a gap in the contract, and a stop.
 - **The contract does not change under running parts** without the human (see *A part's
-  questions*). On their yes, the coordinator commits the change, sends the new wording to every
-  part whose brief carries the interface, and each of them merges that commit in
-  (`git merge <sha>`), which keeps one copy of each patch in history.
+  questions*). On their yes, the coordinator commits the change on a branch of its own, cut
+  from the contract commit, merges it into its own line, and sends the new wording to every
+  part whose brief carries the interface; each of those parts merges that branch in. The
+  branch holds the change and nothing else, so no part takes in the coordinator's other work,
+  and a merge keeps one copy of the patch in history.
 
 **A part's questions.** A part that stops asks the coordinator first, through the human or by
 messaging the coordinator's chat where the tool allows it.
@@ -418,12 +428,13 @@ conflict at every merge, so only the coordinator writes them, at integration.
    the version, the baseline and the handoff. Then the session commit, with `verify` run on its
    drafted message last, as always.
 6. **Clean up,** right after the session commit, so no part leaves anything behind. For each
-   part, `git worktree remove <path>`, then `git branch -d <branch>`; then `git worktree prune`.
-   It is safe by construction: git refuses to remove a checkout that holds uncommitted or
-   untracked work, and `-d` refuses a branch that is not merged. A refusal stops the cleanup and
-   goes to the human; never `--force` or `-D` without their yes. A dropped part's branch was
-   never merged, so it goes only with the human's yes. The next session's entry gate checks
-   that nothing is left.
+   part, `git worktree remove <path>`, then `git branch -d <branch>`, and the same for a
+   contract-change branch; then `git worktree prune`. It is safe by construction: git refuses
+   to remove a checkout that holds uncommitted or untracked work, and `-d` refuses a branch
+   that is not merged. A refusal stops the cleanup and goes to the human; never `--force` or
+   `-D` without their yes. A dropped part's branch was never merged, so it goes only with the
+   human's yes, asked before the session commit; a branch they keep is listed as kept in the
+   done-note's *Parts* section. The next session's entry gate checks that nothing else is left.
 7. **Review as one session.** The human's review (the cycle, step 11) covers the contract, every
    part's commits, the merges and the session commit together, because integration bugs show
    only in the combined code.
@@ -757,12 +768,13 @@ with what your block's **Read** line names. **Then plan, in plan mode,** and ask
 *Ask at the start* questions before any edit.
 
 **Every session ends the same way:**
-1. `<verify command>` green, plus the harnesses the block names.
+1. `<verify command>` green, plus the harnesses the block names; for a commit that changes only
+   docs, `<the docs-only command>`.
 2. Every new check falsified.
 3. A `CHANGELOG.md` entry for anything user-visible, and the version bumped as the table says.
 4. The docs the block names kept true, and ARCHITECTURE's baseline table updated for any count
    that moved.
-5. A done-note appended to the block, then the prompt rewritten, then `<verify command>` run
+5. A done-note appended to the block, then the prompt rewritten, then the same command run
    with the drafted commit message, then a local commit.
 6. The user's `/code-review high`, then a review-fixes commit.
 7. The one-line opener for the next session printed as the chat's last message.
@@ -847,6 +859,7 @@ before the review commit. Leave out a line that has nothing in it.
     what the split did not shorten>.
   - **What the briefs missed:** <each gap a part had to stop on, or "nothing">.
   - **Merge trouble:** <each conflict and how the user resolved it, or "none">.
+  - **Kept:** <a part branch the user chose to keep, and why; the cleanup removed the rest>.
 - **Review (`/code-review high`), <n> findings: <n> fixed and <n> skipped.**
   - **<The finding, as fixed>.** <One line; "the user chose" where they decided.>
   - **Skipped:** <the finding>, because <the reason>.
@@ -907,7 +920,8 @@ baseline, `docs/BACKLOG.md` or `CLAUDE.md`; cherry-pick; merge, except a contrac
 coordinator sends you; push; start parts of your own.
 
 **Stop** when the spec turns out wrong, a decision is underdetermined or the interface does not
-hold, and ask. The coordinator answers what the approved plan settles; anything that changes
+hold, and ask the coordinator: <how this part reaches it: through the user, or a message to
+Session <id>'s chat>. The coordinator answers what the approved plan settles; anything that changes
 behaviour, scope, the interface or your file list goes to the user. Wait for the answer, and
 never guess to keep the parallel run going.
 
