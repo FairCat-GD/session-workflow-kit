@@ -45,8 +45,3 @@ This is *Parallel parts* in `DEVELOPMENT-WORKFLOW.md`.
 
 When a round is finished, the printed line says so and the next chat is an intake: paste it,
 then say what you want next.
-
-## Keeping the kit current
-
-When a project finds a gap in the kit, fix it here; the change is for the projects that start
-after it.
