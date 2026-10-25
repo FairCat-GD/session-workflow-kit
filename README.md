@@ -1,4 +1,4 @@
-# Workflow kit
+# The session workflow kit
 
 <img src="assets/kit.png" alt="Kit, the fox mascot" width="180" align="right">
 
