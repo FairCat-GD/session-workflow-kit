@@ -20,7 +20,7 @@ project's own standing rules live in its `CLAUDE.md`, not here.
 
 | Document | Job | Mutability |
 |---|---|---|
-| `docs/spec/` | **the round in progress**: its spec file(s), any reviews and its `SESSIONS.md` | spec read-only, except dated amendments the human makes; SESSIONS amendable with a logged reason; the folder is emptied when the round closes |
+| `docs/spec/` | **the round in progress**: its spec file(s), any reviews and its `SESSIONS.md`; while a session runs parallel parts, their notes in `parts/` | spec read-only, except dated amendments the human makes; SESSIONS amendable with a logged reason; part notes deleted by the session commit; the folder is emptied when the round closes |
 | `docs/next-session-prompt.md` | **state**: what the next session needs that the docs do not say | rewritten by every session as its last act |
 | `CHANGELOG.md` | what shipped, per version, written for the person using the product | append-only for content |
 | `docs/BACKLOG.md` | work that has been named but belongs to no round, and checks nobody has done by hand | items move out when a round picks them up |
@@ -197,15 +197,21 @@ prompt the previous session printed.
    here on anything the plan changes about the block. Those changes are logged as amendments
    ("amended at plan time, with the user"). The human approves the plan, and only then does the
    session edit.
-4. **Work inside the scope.** Stop the moment the spec turns out wrong, a decision is genuinely
+4. **Look for independent parts.** Once the plan is approved, check each of its steps against
+   the independence test (see *Parallel parts*) and tell the human, in a few lines, which steps
+   could run in parallel and why each is independent, which must stay sequential and what ties
+   them, and what the split would cost: how many parts, and how many chats they may be asked to
+   answer in. If no step passes, say so in one line and go on. Parts start only on the human's
+   clear yes; without one, the session runs sequentially.
+5. **Work inside the scope.** Stop the moment the spec turns out wrong, a decision is genuinely
    underdetermined, or something does not behave as specified. Say so, leave the tree clean
    or clearly marked, and resolve it with the human. A session that guesses to avoid stopping
    is the expensive failure mode, because the guess becomes load-bearing for everything after
    it.
-5. **Verification gate.** `verify` is green before the session may commit. Run the harnesses
+6. **Verification gate.** `verify` is green before the session may commit. Run the harnesses
    the block names (UI, end-to-end, runtime probes), and any other whose ground the change
    covers. Falsify every new check before trusting it.
-6. **Keep the docs true**, in the same commit as the code:
+7. **Keep the docs true**, in the same commit as the code:
    - `CHANGELOG.md`: an entry for everything user-visible, under the session's version, and
      the version bumped in the manifest (see *Versions and the changelog*);
    - `docs/ARCHITECTURE.md`: the sections the change touches, any new deliberate decision or
@@ -216,7 +222,7 @@ prompt the previous session printed.
    - `docs/BACKLOG.md`, for anything the session deferred or could not check by hand.
 
    The block's **Docs** line names the ones the plan expected; it is a floor, not a ceiling.
-7. **Log.** Append a done-note to the session's block in `SESSIONS.md` (template at the end):
+8. **Log.** Append a done-note to the session's block in `SESSIONS.md` (template at the end):
    - what was decided with the human at the start;
    - what actually shipped;
    - the **amendments**, where the block's intent held but its letter did not, each with its
@@ -224,17 +230,19 @@ prompt the previous session printed.
    - what was measured, and what was checked by hand, with the outcome of each;
    - what was falsified;
    - the numbers, with their deltas.
-8. **Handoff.** Rewrite `docs/next-session-prompt.md` for the next session.
-9. **Commit locally**: one commit for the session's work, and in the round's last session the
-   close commit after it. The last act before each commit is `verify` run with its drafted
-   message, after the done-note and the handoff are written, so they are checked too (see
-   *Nothing private in the repository*). Never push without explicit approval for that
-   specific push, and never tag without approval for that tag.
-10. **Review.** The human runs a code review over the session's commit at high effort, in the
-    same chat (in Claude Code, `/code-review high`). In the round's last session that is the
-    release commit; the close after it only deletes. Fix what it finds. A finding that changes
-    behaviour or scope is the human's call, and a finding left unfixed is recorded as skipped,
-    with its reason. Falsify the checks the fixes add. Then:
+9. **Handoff.** Rewrite `docs/next-session-prompt.md` for the next session.
+10. **Commit locally**: one commit for the session's work, and in the round's last session the
+    close commit after it. A session that ran parallel parts has their commits and merges
+    before it (see *Parallel parts*). The last act before each commit is `verify` run with its
+    drafted message, after the done-note and the handoff are written, so they are checked too
+    (see *Nothing private in the repository*). Never push without explicit approval for that
+    specific push, and never tag without approval for that tag.
+11. **Review.** The human runs a code review over the session's commit at high effort, in the
+    same chat (in Claude Code, `/code-review high`); after parallel parts it covers their
+    commits too. In the round's last session that is the release commit; the close after it
+    only deletes. Fix what it finds. A finding that changes behaviour or scope is the human's
+    call, and a finding left unfixed is recorded as skipped, with its reason. Falsify the checks
+    the fixes add. Then:
     - add a **Review** section to the done-note: the findings, what was fixed and what was
       skipped, what was falsified, and the numbers after the review. In the round's last
       session the close has already deleted `SESSIONS.md`, so that section's content goes into
@@ -245,7 +253,7 @@ prompt the previous session printed.
 
     Expect it to find something; the worst finds are routinely in code the session had just
     called safe.
-11. **Print the next session's prompt** as the last message of the chat, ready to paste. If the
+12. **Print the next session's prompt** as the last message of the chat, ready to paste. If the
     human then approves a push, follow *Git*: the handoff's push note is folded into the last
     commit before it goes, so the push adds no commit. Print the prompt again after the push.
     The chat ends there.
@@ -253,16 +261,137 @@ prompt the previous session printed.
 The session is the human's review unit. Between sessions they read the diff and try the build,
 and work that runs past the boundary arrives unreviewed and too large to judge.
 
+## Parallel parts
+
+**Not yet tried.** No session has run parts yet. The first one that does is the pilot, and its
+done-note records how it went: the time saved, anything a brief missed, any merge trouble. A
+project whose copy of this file predates this section can still try it for one session. The
+human says so at plan time, the coordinator reads this section from the kit, and the done-note
+logs the trial as an amendment made at plan time with the user. The project's own docs stay as
+they are.
+
+A session can run independent pieces of its approved plan in parallel, each in a chat of its
+own. It is an option inside the session, never a way around the cycle. The plan agreed before
+any edit, the stop rule, decisions not re-litigated, every check falsified, nothing private,
+one review per session and pushes only with approval all still hold. A session that cannot keep
+all of that runs the pieces one after another.
+
+- **The coordinator** is the session the human opened. It plans, proposes the split, starts the
+  parts and integrates them, and it stays the human's one review unit.
+- **A part** is one independent piece of the approved plan, run in a chat of its own, in its
+  own checkout and on its own branch. Parts are numbered after their session: 8.1, 8.2, C2.1.
+  Letters already mark inserted sessions (6a).
+- **Integration** is the coordinator's last stretch: merging the parts, running the full gates
+  over the combined code, and writing the shared documents.
+
+**The independence test.** A step can become a part only if all of these hold:
+- **It needs no other step's result**, and no other step needs its result.
+- **It needs nothing the coordinator changes in this session.** Parts start from the commit the
+  session started on, right after the plan is approved, and the coordinator commits nothing
+  before they start.
+- **It touches no file that another part, or the coordinator's own steps, touch.** That
+  includes the files every feature tends to touch. Shared registries are the common trap: one
+  list of routes, tools, channels, commands or menu entries, a schema or migration sequence, a
+  generated file, a lockfile, a translations file. Two steps that each add one entry to the same
+  registry are not independent, however separate their modules look. Two tools built in
+  different modules but registered in one tool map stay sequential.
+- **It does not have to land in one change with another step.** A data migration and the code
+  that reads it belong together.
+- **Its checks run on their own.** If the only proof that it works is a harness that needs the
+  other parts too, it is not a part.
+- **It needs no exclusive resource at the same time as another part.** A harness that drives a
+  live external app, a single-instance desktop app, a fixed port or one real device runs once
+  at a time. Each project names its exclusive resources in `CLAUDE.md`.
+
+When in doubt, a step stays sequential. A wrong split costs more than the time it saves.
+
+**The shared documents are the coordinator's alone.** Parts writing them at once would
+conflict at every merge, so only the coordinator writes them, at integration.
+- **The coordinator's alone:** `SESSIONS.md`, the handoff, `CHANGELOG.md`, the version in the
+  manifest, `ARCHITECTURE.md`'s baseline table, `docs/BACKLOG.md` and `CLAUDE.md`.
+- **A part writes a part note instead,** `docs/spec/parts/<id>.<n>.md`, in its own branch
+  (template at the end). It holds what the part built, measured and falsified, its numbers, and
+  anything it could not finish. It is a file rather than a chat report because a report may
+  reach the coordinator only in part and does not outlive the chat. The coordinator folds the
+  notes into the done-note and deletes `parts/` in the session commit.
+- **A part may change a doc of its own area,** such as one section of `ARCHITECTURE.md` or
+  `USER-GUIDE.md`, when no other part touches that file and its brief names it.
+
+**How a session runs with parts.**
+1. **Plan, then look for parts** (the cycle, steps 3 and 4). No split is proposed before the plan
+   is approved, and none starts without the human's clear yes. The coordinator never starts
+   parts on its own initiative.
+2. **Brief each part** (template at the end). A part starts cold, so its brief carries
+   everything:
+   - **its scope:** the plan steps it owns, in the plan's own words;
+   - **its files:** the files it may change, by path. A part that finds it must touch another
+     stops and asks the human;
+   - **its Read line**, as in a session block;
+   - **its setup:** what a fresh checkout needs before `verify` runs, such as dependencies and
+     generated files, because ignored files do not come with a new checkout;
+   - **its gates:** `verify` green on its branch, the tests it must add, and each new check
+     falsified. It runs no exclusive harness; integration does;
+   - **its note:** where it goes and what it holds;
+   - **what it never does:** write a shared document, bump the version, merge, push, or start
+     parts of its own;
+   - **its stop rule,** the same as any session's. When the spec is wrong or a decision is
+     underdetermined, it stops and asks the human in its own chat. It never guesses to keep the
+     parallel run going.
+3. **Start each part** in a fresh checkout on its own branch, cut from the commit the session
+   started on. Any tool that gives a chat its own checkout will do. In Claude Code, the
+   coordinator can start each part as a parallel session in its own worktree, with the brief as
+   its prompt.
+4. **While the parts work,** the coordinator edits no file a part owns. It may do a sequential
+   step that no part touches. A part that stops for the human holds only the merge, and the
+   other parts keep going.
+5. **Each part commits on its branch** like any work commit: typed, with no version, naming the
+   part (`feat: the search index for saved notes (part 8.2)`), with `verify` run on the drafted
+   message last.
+
+**Integration**, in this order:
+1. **Wait for every part.** A part that stopped for the human holds integration until the human
+   answers in that part's chat, or drops the part. A dropped part's steps go back into the plan
+   as an amendment logged with the human. If the chat has to end first, the coordinator writes
+   in the handoff which parts are open and on which branches (the mid-round template has the
+   line), and the next chat finishes this session from integration.
+2. **Check each branch against its brief.** If a part changed a file outside its list, stop and
+   show the human before merging anything.
+3. **Merge, with the human's yes,** in a stated order, one `--no-ff` merge per part, so history
+   keeps each part visible. A conflict stops the merge and goes to the human; it is never
+   resolved by a guess.
+4. **Run the full gates once, on the combined code:** `verify`, every harness the block names,
+   and the exclusive harnesses the parts could not run. The baseline counts must add up to the
+   parts' numbers. Whatever fails here, the coordinator fixes in the session commit and records
+   in the done-note's *Parts* section. A fix that changes behaviour or scope is the human's call
+   first.
+5. **Write the shared documents:** the done-note with its *Parts* section, the CHANGELOG entry,
+   the version, the baseline and the handoff. Then the session commit, with `verify` run on its
+   drafted message last, as always.
+6. **Review as one session.** The human's review (the cycle, step 11) covers every part's
+   commits, the merges and the session commit together, because integration bugs show only in
+   the combined code.
+
+**Limits.**
+- **At most three parts per session,** to begin with. Each is another chat the human may need to
+  answer and another branch to review. The limit can rise once it has been tried.
+- **Parts do not split further.** A part never starts parts of its own.
+- **Parts live inside one session.** Running whole sessions of a round in parallel touches the
+  round plan, the handoff, versions and reviews at once, and is not part of this workflow.
+
 ## What each commit touches
 
 | Commit | Adds | Updates | Removes |
 |---|---|---|---|
 | **Intake**: `docs: open round <N> — <theme>` | the round's spec files and `SESSIONS.md` | `docs/BACKLOG.md` (what the intake declined); the handoff, which now opens the first session | from `docs/BACKLOG.md`, the items the round picked up |
-| **Session**: `feat:`, `fix:` or `refactor:`, ending `(x.y.z)` | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it |
+| **Part** of a session: `feat:`, `fix:` or `refactor:`, ending `(part <id>.<n>)` | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
+| **Session**: `feat:`, `fix:` or `refactor:`, ending `(x.y.z)` | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
 | **Review**: `review: …` | the fixes and their tests; the done-note's Review section (after a close, the commit message carries it) | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
 | **Architecture review**: `docs: architecture review — <milestone>` | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
 | **Close**: `docs: close round <N>` | — | the handoff, which now says no round is in progress | every file in `docs/spec/` |
 
+- **After parallel parts, the merges are git's own commits:** one `--no-ff` merge per part,
+  after the human's yes, so history keeps each part visible. The session commit follows them
+  with the integration's fixes, the version and the shared documents (see *Parallel parts*).
 - **An intake's review** fixes the spec and the plan. It has no CHANGELOG entry and no version.
   Neither has an architecture review, whose `/code-review` follows like any session's.
 - **A session nobody can see** (docs, comments, an invisible refactor) has no CHANGELOG entry
@@ -277,7 +406,8 @@ and work that runs past the boundary arrives unreviewed and too large to judge.
 ## The rules
 
 1. **One chat per session, never two sessions in one chat.** The split exists so no session
-   inherits stale context or a half-formed plan.
+   inherits stale context or a half-formed plan. A session's parallel parts run in chats of
+   their own, which the session starts and which end with it.
 2. **The spec is read-only.** A session that finds the spec wrong stops and says so. Agreed
    divergence is recorded as an amendment in the block, and a decision the human changes is
    added to the spec as a dated amendment. The spec's original text stays true to its moment.
@@ -289,7 +419,7 @@ and work that runs past the boundary arrives unreviewed and too large to judge.
 5. **Every session ends with a done-note, a handoff and a commit.** No exceptions for short
    sessions. An intake's plan stands in for its done-note.
 6. **Pushes and tags are a human decision**, approved one at a time.
-7. **When a session goes wrong, stop** (step 4 of the cycle).
+7. **When a session goes wrong, stop** (step 5 of the cycle).
 
 ## Git
 
@@ -298,8 +428,14 @@ and work that runs past the boundary arrives unreviewed and too large to judge.
   before the push.
 - **Before any push, list `git log --format='%h %s' origin/main..HEAD`.** Parallel sessions may
   share a checkout, and a push carries whatever is on the branch, not only this session's work.
-  If a commit is not this session's, stop and say so.
+  If a commit is not this session's, stop and say so. A session's part commits and their merges
+  are its own.
 - **Stage explicit paths; never `git add -A`.** Same reason.
+- **Each parallel part has its own checkout and branch**, cut from the commit the session started
+  on (see *Parallel parts*). Only the coordinator merges: one `--no-ff` merge per part, after
+  the human's yes. Git writes the merge messages, and the session commit's `verify` checks them,
+  because the hygiene stage reads every message reachable from `HEAD`. Part branches are never
+  pushed. After the session commit they are deleted and their checkouts removed.
 - **Never undo with `git checkout <path>`.** It silently discards changes that may not be
   yours. Revert your own edits by editing, and falsify a check by copying the file aside and
   back.
@@ -308,6 +444,8 @@ and work that runs past the boundary arrives unreviewed and too large to judge.
   - `docs: open round <N> — <theme>` for an intake.
   - `feat:`, `fix:` or `refactor:` for a session's work, ending with the version when it cuts
     one: `feat: quiet copies — one a day, kept 7 days, restored from Help (0.41.0)`.
+  - The same types for a parallel part's work, ending with the part and no version:
+    `feat: the search index for saved notes (part 8.2)`.
   - `docs: <what it wrote> (x.y.z)` for the round's last session when its own work is
     documentation.
   - `review: <the findings, in plain words>, and <n> smaller` for the review commit.
@@ -513,7 +651,10 @@ this repository* paragraph.
   - whether there is a user guide, and what "user-visible" means;
   - headless drivability, which matters only where there is something to drive;
   - the git remote, which decides pushes, tags and changelog links;
-  - CI, which this workflow does not use; a project that adds it says so.
+  - CI, which this workflow does not use; a project that adds it says so;
+  - parallel parts, which are optional (see *Parallel parts*), and the project's exclusive
+    resources, named in `CLAUDE.md`: the harnesses, apps, ports and devices only one chat can
+    use at a time.
 
 ## Templates
 
@@ -621,11 +762,74 @@ before the review commit. Leave out a line that has nothing in it.
   - <each new check: what was broken, and that it failed at its own step>.
 - **Numbers:** <n> unit tests (<±d>), <n> `<harness>` checks (<±d>), <the other baseline
   counts>.
+- **Parts** (<n>, run in parallel with the user's yes; merged in the order <id>.<n>, <id>.<n>):
+  - **<id>.<n>, <title>.** <What it built, measured and falsified, from its note; anything it
+    could not finish.>
+  - **Integration fixes:** <each failure the combined gates found, and its fix>.
+  - **The counts add up:** <the parts' numbers, and the baseline deltas they sum to>.
 - **Review (`/code-review high`), <n> findings: <n> fixed and <n> skipped.**
   - **<The finding, as fixed>.** <One line; "the user chose" where they decided.>
   - **Skipped:** <the finding>, because <the reason>.
   - **Falsified:** <the checks the fixes added>.
   - **Numbers after the review:** <counts>.
+```
+
+### A part brief
+
+The coordinator writes one for each parallel part and gives it to the part as its first message
+(see *Parallel parts*). Fill every `<…>`.
+
+```markdown
+You are part <id>.<n> of Session <id>, in a checkout of your own, on a branch cut from
+`<sha>`. The scope below is from the plan the user approved in Session <id>'s chat; work inside
+it. Read <the Read line>, CLAUDE.md, then this brief.
+
+**Scope**, in the approved plan's words:
+- <each plan step this part owns>.
+
+**Files you may change:** `<path>`, `<path>`. To touch any other file, stop and ask the user.
+
+**Setup:** `<what a fresh checkout needs before verify runs>`.
+
+**Gates:**
+- `<verify command>` green on this branch, with these tests:
+  - <each behaviour the part must prove>.
+- Each new check falsified once.
+- Do not run `<the exclusive harnesses>`; integration runs them.
+
+**Your note:** `docs/spec/parts/<id>.<n>.md`, from the workflow's part-note template, committed
+with your work.
+
+**Commit** on this branch: `<type>: <what changed> (part <id>.<n>)`, with no version, and
+`verify` run on the drafted message last.
+
+**Never:** write `SESSIONS.md`, the handoff, `CHANGELOG.md`, the version, ARCHITECTURE's
+baseline, `docs/BACKLOG.md` or `CLAUDE.md`; merge; push; start parts of your own.
+
+**Stop** when the spec turns out wrong or a decision is underdetermined, and ask the user here.
+Never guess to keep the parallel run going.
+
+**Watch for:**
+- **<A trap of the block's that reaches this part>.** <Why it bites, and what to do instead.>
+```
+
+### `docs/spec/parts/<id>.<n>.md`, a part note
+
+The part commits it with its work. The coordinator folds it into the done-note's *Parts* section
+and deletes it in the session commit. Leave out a line that has nothing in it.
+
+```markdown
+# Part <id>.<n>: <title>
+
+- **Built:** <the names, files and mechanisms, as built>.
+- **Measured:** <each claim about runtime behaviour, and the version it was measured on>.
+- **Falsified:**
+  - <each new check: what was broken, and that it failed at its own step>.
+- **Numbers:** <n> unit tests (<±d>), <the other counts this part moved>.
+- **For the shared documents:** <the CHANGELOG lines, the ARCHITECTURE sections and baseline
+  counts, and the backlog items, for the coordinator to write>.
+- **Stopped for the user:** <each question, and the answer>.
+- **Not finished:** <what, and why>.
 ```
 
 ### `docs/spec/FEATURE-<name>.md`
@@ -746,6 +950,10 @@ Release <x.y.z>.
 - **Decisions written down nowhere else:** <…>.
 - **Baseline** (ARCHITECTURE's table, v<x.y.z>): <the counts>.
 - **Not done:** <what was skipped, and why>.
+- **<Only when a session ended with a parallel part still open:> <id> is unfinished.** Part
+  <id>.<n> is open on `<branch>`, waiting for <the question>; parts <ids> are finished on
+  `<branches>` and not merged. The next chat finishes <id> from integration and starts no other
+  session first.
 
 ## Watch for
 

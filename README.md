@@ -37,6 +37,13 @@ Everything needed to start a new project under this session-based workflow.
    pushed, records the push in the handoff's last commit, pushes, and prints the prompt again.
 6. Close the chat. The next session is always a new one.
 
+After you approve a plan, the session checks whether parts of it could run in parallel. If any
+could, it tells you which ones, why, and what the split would cost, then asks. On a yes, each
+part runs in a chat of its own, which may ask you questions. The session merges the parts only
+with your yes, and you review it all as one session. This is *Parallel parts* in
+`DEVELOPMENT-WORKFLOW.md`. It has not been tried yet. A project whose copy predates it can try
+it for one session: at plan time, ask the session to read that section from this kit.
+
 When a round is finished, the printed prompt says so and the next chat is an intake: paste the
 prompt, then say what you want next.
 
