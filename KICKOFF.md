@@ -23,6 +23,9 @@ list what it leaves underdetermined, including at least:
   another, secrets in logs…). These become the rules every session is held to.
 - **How it is verified.** Unit tests, UI or end-to-end harnesses, runtime probes, and what
   each cannot see. There is no CI: `verify` and the harnesses are the gate, run by the session.
+  Which of them, and what else, only one chat can use at a time (a live external app, a
+  single-instance desktop app, a fixed port, one real device): these are the project's
+  exclusive resources, which parallel parts never run.
 - **Distribution.** How it is built, signed, installed and updated, or explicitly not.
 - **Versions and the remote.** Each session is a release by default; say if this project should
   release at milestones instead. Which versions are milestones that get a tag. Whether there is
@@ -72,8 +75,9 @@ Session 1's block also takes *The hygiene stage's design*, below.
      cycle, step 2).
    - **Session 1 is always the scaffold** (`0.1.0`): everything in the workflow's *Day one*.
      That is the skeleton, `verify` with its hygiene stage (its design copied into the block
-     from below), the version shown in the product, `CHANGELOG.md` from the template,
-     `tests/fixtures/`, the README, and the Commands table in `CLAUDE.md`.
+     from below) and each stage runnable by name, the version shown in the product,
+     `CHANGELOG.md` from the template, `tests/fixtures/`, `.claude/worktrees/` ignored, the
+     README, and the Commands table in `CLAUDE.md` with the docs-only command in it.
    - **Every later session** is a vertical slice finishable in one chat, and a release (0.2.0,
      0.3.0, …).
    - **A plan of more than five sessions places an architecture review after each milestone**
@@ -122,8 +126,10 @@ Session 1's block also takes *The hygiene stage's design*, below.
   the traceability table for a requirement with no session. Fix what it finds; a finding that
   changes a decision is mine to call. Commit the fixes as
   `review: <the findings, in plain words>`.
-- Print the Session 1 prompt as your last message, ready to paste, and stop. Session 1 runs in
-  a new chat, which I open in plan mode.
+- Print the one-line opener as your last message, ready to paste, and stop:
+  `Read docs/next-session-prompt.md and do the session it names: Session 1, the scaffold, release 0.1.0.`
+  Never print the handoff itself; Session 1 reads it from the repository. Session 1 runs in a
+  new chat, which I open in plan mode.
 
 ---
 
@@ -259,8 +265,9 @@ the user** note; the wording above it stays.
 
 ## 6. Verification strategy
 
-**`verify` = `<command>`**: named stages, each failing on its own, then a summary. <The stages>,
-then hygiene. Green before every commit.
+**`verify` = `<command>`**: named stages, each failing on its own and runnable alone by name,
+then a summary. <The stages>, then hygiene. Green before every commit; a commit that changes only
+docs runs `<the docs-only command>`, the stages that read docs.
 
 | Layer | Runs | Covers | Cannot see |
 |---|---|---|---|
@@ -318,8 +325,8 @@ changing code.** `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow th
 Every session runs the cycle in `docs/DEVELOPMENT-WORKFLOW.md`: entry gate, read order, a plan
 agreed in plan mode, verify gate, docs kept true, changelog, a done-note in its `SESSIONS.md`
 block, handoff prompt for the next session, local commit, then the user's `/code-review high`,
-a review-fixes commit, and the next session's prompt printed as the last message. One session
-per chat. A push or tag needs explicit approval, each time.
+a review-fixes commit, and the one-line opener for the next session printed as the last
+message. One session per chat. A push or tag needs explicit approval, each time.
 
 **Scope lives in `docs/spec/SESSIONS.md`** (one block per session, in order) and the round's
 spec files (`SPEC.md` in round 1; after it, one `FEATURE-*.md` per request, holding the request
@@ -332,8 +339,10 @@ invariants and baseline (once it exists), the block itself and the previous done
 the prompt. The Read line is a floor: read further where the code leads.
 
 1. `<verify command>` (typecheck + lint + format check + tests + hygiene) must be green before
-   you commit. Run the heavier harnesses (`<harness commands>`) when your change could affect
-   what they cover; expected results are in ARCHITECTURE.md's baseline table.
+   you commit. A commit that changes only docs runs `<the docs-only command>` instead; one that
+   changes code, a test, a fixture, a config or the manifest runs it all. Run the heavier
+   harnesses (`<harness commands>`) when your change could affect what they cover; expected
+   results are in ARCHITECTURE.md's baseline table.
 2. Falsify any new check before trusting it: break the assertion, watch it fail at its own
    step, restore it.
 3. User-visible changes get a line in `CHANGELOG.md`. Version is `major.minor.fix` in
@@ -378,10 +387,15 @@ commit message for attribution.
 | Command | Does |
 |---|---|
 | <filled in by Session 1> | |
+| `<the docs-only command>` | The stages that read docs, for a commit that changes only docs: hygiene, plus <the format check, where it covers them> |
 
 <Below the table, what a session would otherwise learn the hard way about running them: what
 the unit tests cannot see and which harness can; that no harness touches a person's real data;
 where temp files go and what collects them.>
+
+**Exclusive resources:** <what only one chat can use at a time: a harness that drives a live
+app, a single-instance desktop app, a fixed port, a device; or "none">. A parallel part never
+runs them; the session's integration does.
 
 ## Git
 
@@ -389,9 +403,9 @@ where temp files go and what collects them.>
   `git log origin/main..HEAD`; parallel sessions may share this checkout.
 - Stage explicit paths, never `git add -A`. Never undo with `git checkout <path>`.
 - As the last act before each commit, after the done-note and the handoff: draft the message
-  into `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `<verify command> --message` with it,
-  commit with `git commit -F` from it, then delete it. The message is checked before it exists
-  in history.
+  into `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `<verify command> --message` with it
+  (`<the docs-only command>` for a commit that changes only docs), commit with `git commit -F`
+  from it, then delete it. The message is checked before it exists in history.
 
 ## Do not
 
