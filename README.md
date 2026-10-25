@@ -1,6 +1,16 @@
 # Workflow kit
 
+<img src="assets/kit.png" alt="Kit, the fox mascot" width="180" align="right">
+
+Build real software with AI coding agents and keep it on track for weeks, across dozens of
+chats. The kit keeps the plan, the rules and the current state in the repository, so every new
+chat picks up exactly where the last one stopped. Each session plans with you before it writes
+a line, proves its work with tests and checks, and leaves a clear note for the next one. You
+stay in charge: you approve every plan, review every session and decide every push.
+
 Everything needed to start a new project under this session-based workflow.
+
+<br clear="right">
 
 | File | What it is |
 |---|---|
