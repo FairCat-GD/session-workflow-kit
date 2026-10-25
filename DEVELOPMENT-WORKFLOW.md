@@ -321,29 +321,20 @@ conflict at every merge, so only the coordinator writes them, at integration.
 1. **Plan, then look for parts** (the cycle, steps 3 and 4). No split is proposed before the plan
    is approved, and none starts without the human's clear yes. The coordinator never starts
    parts on its own initiative.
-2. **Brief each part** (template at the end). A part starts cold, so its brief carries
-   everything:
-   - **its scope:** the plan steps it owns, in the plan's own words;
-   - **its files:** the files it may change, by path. A part that finds it must touch another
-     stops and asks the human;
-   - **its Read line**, as in a session block;
-   - **its setup:** what a fresh checkout needs before `verify` runs, such as dependencies and
-     generated files, because ignored files do not come with a new checkout;
-   - **its gates:** `verify` green on its branch, the tests it must add, and each new check
-     falsified. It runs no exclusive harness; integration does;
-   - **its note:** where it goes and what it holds;
-   - **what it never does:** write a shared document, bump the version, merge, push, or start
-     parts of its own;
-   - **its stop rule,** the same as any session's. When the spec is wrong or a decision is
-     underdetermined, it stops and asks the human in its own chat. It never guesses to keep the
-     parallel run going.
+2. **Brief each part** from the template at the end. A part starts cold and is not a session:
+   its brief replaces the cycle for it, whatever `CLAUDE.md` says every session does, and
+   carries everything it needs, the setup a fresh checkout needs before `verify` runs included
+   (ignored files do not come with a new checkout). Its stop rule is any session's: it never
+   guesses to keep the parallel run going.
 3. **Start each part** in a fresh checkout on its own branch, cut from the commit the session
-   started on. Any tool that gives a chat its own checkout will do. In Claude Code, the
-   coordinator can start each part as a parallel session in its own worktree, with the brief as
-   its prompt.
+   started on. The checkout lives outside the repository's folder, or in a path the project's
+   tools ignore, so the coordinator's `verify` and harnesses never read a part's copy. Any tool
+   that gives a chat its own checkout will do. In Claude Code, the coordinator can start each
+   part as a parallel session in its own worktree, with the brief as its prompt.
 4. **While the parts work,** the coordinator edits no file a part owns. It may do a sequential
-   step that no part touches. A part that stops for the human holds only the merge, and the
-   other parts keep going.
+   step that no part touches, and commits it before the merges as a work commit, typed, with no
+   version: `refactor: <what changed> (<id>, before the merges)`. A part that stops for the
+   human holds only the merge, and the other parts keep going.
 5. **Each part commits on its branch** like any work commit: typed, with no version, naming the
    part (`feat: the search index for saved notes (part 8.2)`), with `verify` run on the drafted
    message last.
@@ -354,16 +345,18 @@ conflict at every merge, so only the coordinator writes them, at integration.
    as an amendment logged with the human. If the chat has to end first, the coordinator writes
    in the handoff which parts are open and on which branches (the mid-round template has the
    line), and the next chat finishes this session from integration.
-2. **Check each branch against its brief.** If a part changed a file outside its list, stop and
-   show the human before merging anything.
-3. **Merge, with the human's yes,** in a stated order, one `--no-ff` merge per part, so history
-   keeps each part visible. A conflict stops the merge and goes to the human; it is never
-   resolved by a guess.
+2. **Check each branch against its brief.** If a part changed a file outside its list (its own
+   note is always on it), stop and show the human before merging anything.
+3. **Merge, with the human's yes,** onto a clean tree, in a stated order, one `--no-ff` merge
+   per part, so history keeps each part visible. A merge is a commit like any other:
+   `git merge --no-ff --no-commit <branch>`, a typed message drafted
+   (`merge: part 8.1 — <what it adds>`), `verify` run with it, then `git commit -F`. A conflict
+   stops the merge and goes to the human; it is never resolved by a guess.
 4. **Run the full gates once, on the combined code:** `verify`, every harness the block names,
-   and the exclusive harnesses the parts could not run. The baseline counts must add up to the
-   parts' numbers. Whatever fails here, the coordinator fixes in the session commit and records
-   in the done-note's *Parts* section. A fix that changes behaviour or scope is the human's call
-   first.
+   and the exclusive harnesses the parts could not run. The baseline counts must equal the
+   parts' numbers plus the coordinator's own. Whatever fails here, the coordinator fixes in the
+   session commit and records in the done-note's *Parts* section. A fix that changes behaviour
+   or scope is the human's call first.
 5. **Write the shared documents:** the done-note with its *Parts* section, the CHANGELOG entry,
    the version, the baseline and the handoff. Then the session commit, with `verify` run on its
    drafted message last, as always.
@@ -389,9 +382,10 @@ conflict at every merge, so only the coordinator writes them, at integration.
 | **Architecture review**: `docs: architecture review — <milestone>` | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
 | **Close**: `docs: close round <N>` | — | the handoff, which now says no round is in progress | every file in `docs/spec/` |
 
-- **After parallel parts, the merges are git's own commits:** one `--no-ff` merge per part,
-  after the human's yes, so history keeps each part visible. The session commit follows them
-  with the integration's fixes, the version and the shared documents (see *Parallel parts*).
+- **After parallel parts,** the coordinator's own work commit (if it did a sequential step)
+  and one `--no-ff` merge per part come first, each typed and checked like any commit. The
+  session commit follows them with the integration's fixes, the version and the shared
+  documents (see *Parallel parts*).
 - **An intake's review** fixes the spec and the plan. It has no CHANGELOG entry and no version.
   Neither has an architecture review, whose `/code-review` follows like any session's.
 - **A session nobody can see** (docs, comments, an invisible refactor) has no CHANGELOG entry
@@ -428,14 +422,15 @@ conflict at every merge, so only the coordinator writes them, at integration.
   before the push.
 - **Before any push, list `git log --format='%h %s' origin/main..HEAD`.** Parallel sessions may
   share a checkout, and a push carries whatever is on the branch, not only this session's work.
-  If a commit is not this session's, stop and say so. A session's part commits and their merges
-  are its own.
+  If a commit is not this session's, stop and say so. A session's part commits, its work commit
+  before the merges and the merges are its own.
 - **Stage explicit paths; never `git add -A`.** Same reason.
 - **Each parallel part has its own checkout and branch**, cut from the commit the session started
-  on (see *Parallel parts*). Only the coordinator merges: one `--no-ff` merge per part, after
-  the human's yes. Git writes the merge messages, and the session commit's `verify` checks them,
-  because the hygiene stage reads every message reachable from `HEAD`. Part branches are never
-  pushed. After the session commit they are deleted and their checkouts removed.
+  on, its checkout outside the repository's folder or in an ignored path (see *Parallel
+  parts*). Only the coordinator merges, onto a clean tree: one `--no-ff` merge per part, after
+  the human's yes, made with `--no-commit` and committed from a drafted message that `verify`
+  has checked, never with git's own message. Part branches are never pushed. After the session
+  commit they are deleted and their checkouts removed.
 - **Never undo with `git checkout <path>`.** It silently discards changes that may not be
   yours. Revert your own edits by editing, and falsify a check by copying the file aside and
   back.
@@ -445,7 +440,9 @@ conflict at every merge, so only the coordinator writes them, at integration.
   - `feat:`, `fix:` or `refactor:` for a session's work, ending with the version when it cuts
     one: `feat: quiet copies — one a day, kept 7 days, restored from Help (0.41.0)`.
   - The same types for a parallel part's work, ending with the part and no version:
-    `feat: the search index for saved notes (part 8.2)`.
+    `feat: the search index for saved notes (part 8.2)`. The coordinator's own step before the
+    merges ends `(<id>, before the merges)`.
+  - `merge: part <id>.<n> — <what it adds>` for each part's merge.
   - `docs: <what it wrote> (x.y.z)` for the round's last session when its own work is
     documentation.
   - `review: <the findings, in plain words>, and <n> smaller` for the review commit.
@@ -784,10 +781,14 @@ You are part <id>.<n> of Session <id>, in a checkout of your own, on a branch cu
 `<sha>`. The scope below is from the plan the user approved in Session <id>'s chat; work inside
 it. Read <the Read line>, CLAUDE.md, then this brief.
 
+You are not a session. This brief replaces the session cycle for you, whatever CLAUDE.md says
+every session does: no entry gate, no done-note, no handoff, no CHANGELOG entry, no version.
+
 **Scope**, in the approved plan's words:
 - <each plan step this part owns>.
 
-**Files you may change:** `<path>`, `<path>`. To touch any other file, stop and ask the user.
+**Files you may change:** `<path>`, `<path>`, and your note. To touch any other file, stop and
+ask the user.
 
 **Setup:** `<what a fresh checkout needs before verify runs>`.
 
@@ -797,8 +798,10 @@ it. Read <the Read line>, CLAUDE.md, then this brief.
 - Each new check falsified once.
 - Do not run `<the exclusive harnesses>`; integration runs them.
 
-**Your note:** `docs/spec/parts/<id>.<n>.md`, from the workflow's part-note template, committed
-with your work.
+**Your note:** `docs/spec/parts/<id>.<n>.md`, committed with your work. It holds what you built,
+measured and falsified; your numbers; what the shared documents need (CHANGELOG lines,
+ARCHITECTURE sections and counts, backlog items); each question you asked the user; and
+anything not finished.
 
 **Commit** on this branch: `<type>: <what changed> (part <id>.<n>)`, with no version, and
 `verify` run on the drafted message last.
