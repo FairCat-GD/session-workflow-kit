@@ -7,6 +7,7 @@ Everything needed to start a new project under this session-based workflow.
 | `DEVELOPMENT-WORKFLOW.md` | The method and its templates. Copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`. |
 | `KICKOFF.md` | The instructions for Session 0, the intake that sets a project up, with the `SPEC.md` and `CLAUDE.md` templates. Used once per project. |
 | `README.md` | This note, for you. |
+| `parallel/` | The same kit with *Parallel parts* added: a session can run independent pieces of its approved plan in chats of their own, and merges them with your yes. Not yet tried. Its own `README.md` says how to use it. |
 
 ## Starting a project
 
@@ -37,13 +38,6 @@ Everything needed to start a new project under this session-based workflow.
    pushed, records the push in the handoff's last commit, pushes, and prints the prompt again.
 6. Close the chat. The next session is always a new one.
 
-After you approve a plan, the session checks whether parts of it could run in parallel. If any
-could, it tells you which ones, why, and what the split would cost, then asks. On a yes, each
-part runs in a chat of its own, which may ask you questions. The session merges the parts only
-with your yes, and you review it all as one session. This is *Parallel parts* in
-`DEVELOPMENT-WORKFLOW.md`. It has not been tried yet. A project whose copy predates it can try
-it for one session: at plan time, ask the session to read that section from this kit.
-
 When a round is finished, the printed prompt says so and the next chat is an intake: paste the
 prompt, then say what you want next.
 
@@ -52,3 +46,7 @@ prompt, then say what you want next.
 When a project finds a gap in the kit, fix it here first. Then copy `DEVELOPMENT-WORKFLOW.md`
 into the projects that should follow the change, keeping each project's *In this repository*
 paragraph.
+
+`parallel/` is this kit plus *Parallel parts*, so a fix to anything else lands in both copies.
+`diff DEVELOPMENT-WORKFLOW.md parallel/DEVELOPMENT-WORKFLOW.md` should show only the parallel
+changes; the same goes for `KICKOFF.md`.

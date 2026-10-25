@@ -23,9 +23,6 @@ list what it leaves underdetermined, including at least:
   another, secrets in logs…). These become the rules every session is held to.
 - **How it is verified.** Unit tests, UI or end-to-end harnesses, runtime probes, and what
   each cannot see. There is no CI: `verify` and the harnesses are the gate, run by the session.
-  Which of them, and what else, only one chat can use at a time (a live external app, a
-  single-instance desktop app, a fixed port, one real device): these are the project's
-  exclusive resources, which parallel parts never run.
 - **Distribution.** How it is built, signed, installed and updated, or explicitly not.
 - **Versions and the remote.** Each session is a release by default; say if this project should
   release at milestones instead. Which versions are milestones that get a tag. Whether there is
@@ -385,10 +382,6 @@ commit message for attribution.
 <Below the table, what a session would otherwise learn the hard way about running them: what
 the unit tests cannot see and which harness can; that no harness touches a person's real data;
 where temp files go and what collects them.>
-
-**Exclusive resources:** <what only one chat can use at a time: a harness that drives a live
-app, a single-instance desktop app, a fixed port, a device; or "none">. A parallel part never
-runs them; the session's integration does.
 
 ## Git
 
