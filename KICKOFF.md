@@ -387,7 +387,7 @@ commit message for attribution.
 | Command | Does |
 |---|---|
 | <filled in by Session 1> | |
-| `<the docs-only command>` | The stages that read docs, for a commit that changes only docs: hygiene, plus <the format check, where it covers them> |
+| `<the docs-only command>` | The stages that read docs, for a commit that changes only docs: hygiene, plus <the format check and lint, where they cover them> |
 
 <Below the table, what a session would otherwise learn the hard way about running them: what
 the unit tests cannot see and which harness can; that no harness touches a person's real data;

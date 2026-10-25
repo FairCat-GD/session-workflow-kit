@@ -168,13 +168,15 @@ Each of these is cheap on day one and expensive to retrofit.
 - **Checkout tuning lives in the repo.** Anything set in `.git/config` or an editor does not
   travel to the next clone; put it in scripts or docs.
 - **Part checkouts are ignored.** `.gitignore` and every tool `verify` runs skip
-  `.claude/worktrees/`, where Claude Code creates a parallel part's checkout (on a branch
-  `claude/<name>`; see *Parallel parts*), so neither `verify` nor the hygiene stage reads a
-  part's copy.
+  `.claude/worktrees/` at the checkout's root, where Claude Code creates a parallel part's
+  checkout (on a branch `claude/<name>`; see *Parallel parts*), so neither `verify` nor the
+  hygiene stage reads a part's copy. Anchor the skip to the root: a part's own `verify` runs
+  inside such a checkout and must still read its files.
 - **A truthful README**: what the thing is, how to run it, and where the docs are.
 - **The Commands table in `CLAUDE.md`**, filled in: every script a session runs, one line
   each on what it does. It names the docs-only command too: the stages that read docs, hygiene
-  and the format check where it covers them (`verify format hygiene --message <draft>`).
+  plus the format check and lint where they cover them
+  (`verify format hygiene --message <draft>`).
 
 ## The session cycle
 
@@ -185,8 +187,10 @@ the repository.
 1. **Entry gate.** The tree is clean, `docs/next-session-prompt.md` names the session you are
    about to do, and, unless this is the round's first session, the previous session's block in
    `SESSIONS.md` has its done-note. If it does not, that session did not finish; do not stack
-   on it. Then check that no parallel part was left behind: the part branches the last
-   done-note's *Parts* section names, and their checkouts, are gone (`git branch`,
+   on it. A session the handoff says paused at integration is the exception: it resumes, and
+   its open parts, named in the handoff, stay. Then check that no parallel part was left
+   behind: where the previous done-note has a *Parts* section, the branches it names (the
+   parts' and any contract change's) and their checkouts are gone (`git branch`,
    `git worktree list`). An intake finds that done-note in the release commit its handoff names
    (`git show <sha>:docs/spec/SESSIONS.md`). Remove any that remain the way integration does
    (*Parallel parts*, integration step 6), and take what git refuses to the human; a branch the
@@ -228,7 +232,7 @@ the repository.
    the block names (UI, end-to-end, runtime probes), and any other whose ground the change
    covers. Falsify every new check before trusting it. A commit that changes only docs runs
    only the stages that read what changed: the docs-only command in `CLAUDE.md`, which is
-   hygiene, plus the format check or lint where they cover docs. A file that a test or a build
+   hygiene, plus the format check and lint where they cover docs. A file that a test or a build
    reads, such as a README whose examples run as doctests, is not docs for this rule; no test
    reads the rest (*Day one*), so the other stages have nothing new to check. A commit that
    changes anything
@@ -328,9 +332,10 @@ all of that runs the pieces one after another.
   that reads it belong together.
 - **Its checks run on their own.** If the only proof that it works is a harness that needs the
   other parts too, it is not a part.
-- **It needs no exclusive resource at the same time as another part.** A harness that drives a
-  live external app, a single-instance desktop app, a fixed port or one real device runs once
-  at a time. Each project names its exclusive resources in `CLAUDE.md`.
+- **Its checks need no exclusive resource.** A harness that drives a live external app, a
+  single-instance desktop app, a fixed port or one real device runs once at a time, so no part
+  runs it; integration does. A step whose only proof needs one is not a part. Each project
+  names its exclusive resources in `CLAUDE.md`.
 
 When in doubt, a step stays sequential. A wrong split costs more than the time it saves.
 
@@ -347,10 +352,13 @@ and the full `verify` runs on its drafted message last.
   is a gap in the contract, and a stop.
 - **The contract does not change under running parts** without the human (see *A part's
   questions*). On their yes, the coordinator commits the change on a branch of its own, cut
-  from the contract commit, merges it into its own line, and sends the new wording to every
-  part whose brief carries the interface; each of those parts merges that branch in. The
-  branch holds the change and nothing else, so no part takes in the coordinator's other work,
-  and a merge keeps one copy of the patch in history.
+  from the contract commit in a checkout of its own (`git worktree add -b <branch> <path>
+  <sha>`, in the ignored path), merges it into its own line, and sends the new wording to
+  every part whose brief carries the interface; each of those parts merges that branch in.
+  Each of these merges is drafted and checked like any other:
+  `merge: the contract change — <what changed>`. The branch holds the change and nothing else,
+  so no part takes in the coordinator's other work, and a merge keeps one copy of the patch in
+  history.
 
 **A part's questions.** A part that stops asks the coordinator first, through the human or by
 messaging the coordinator's chat where the tool allows it.
@@ -406,16 +414,21 @@ conflict at every merge, so only the coordinator writes them, at integration.
 **Integration**, in this order:
 1. **Wait for every part.** A part that stopped for the human holds integration until the human
    answers in that part's chat, or drops the part. A dropped part's steps go back into the plan
-   as an amendment logged with the human. If the chat has to end first, the coordinator writes
-   in the handoff which parts are open and on which branches (the mid-round template has the
-   line), and the next chat finishes this session from integration.
+   as an amendment logged with the human, and with their yes the session commit removes or
+   neutralises that part's stubs and registry entries from the contract, so nothing ships
+   pointing at a stub. If the chat has to end first, the coordinator writes in the handoff
+   which parts are open and on which branches (the mid-round template has the line), commits
+   only the handoff as `docs: <id> paused at integration` with the docs-only command, and the
+   next chat finishes this session from integration. Its done-note comes then, so rule 5 holds
+   when the session ends.
 2. **Check each branch against its brief:** `git diff --stat HEAD...<branch>` lists only what
    the part itself changed, even after it merged a contract change. If a part changed a file
    outside its list (its own note is always on it, and a file the human added is logged there),
    stop and show the human before merging anything.
-3. **Merge, with the human's yes,** onto a clean tree, in a stated order, one `--no-ff` merge
-   per part, so history keeps each part visible. A merge is a commit like any other:
-   `git merge --no-ff --no-commit <branch>`, a typed message drafted
+3. **Merge, with the human's yes,** onto a tree with no uncommitted change outside the shared
+   documents (no part touches those, and they wait for the session commit), in a stated
+   order, one `--no-ff` merge per part, so history keeps each part visible. A merge is a
+   commit like any other: `git merge --no-ff --no-commit <branch>`, a typed message drafted
    (`merge: part 8.1 — <what it adds>`), `verify` run with it, then `git commit -F`. A conflict
    stops the merge and goes to the human; it is never resolved by a guess.
 4. **Prove the seam, then run the full gates once, on the combined code.** First add the
@@ -434,7 +447,9 @@ conflict at every merge, so only the coordinator writes them, at integration.
    that is not merged. A refusal stops the cleanup and goes to the human; never `--force` or
    `-D` without their yes. A dropped part's branch was never merged, so it goes only with the
    human's yes, asked before the session commit; a branch they keep is listed as kept in the
-   done-note's *Parts* section. The next session's entry gate checks that nothing else is left.
+   done-note's *Parts* section. A branch kept after a refusal here is recorded there by the
+   review commit, which adds to the done-note anyway. The next session's entry gate checks
+   that nothing else is left.
 7. **Review as one session.** The human's review (the cycle, step 11) covers the contract, every
    part's commits, the merges and the session commit together, because integration bugs show
    only in the combined code.
@@ -506,7 +521,8 @@ conflict at every merge, so only the coordinator writes them, at integration.
 - **Each parallel part has its own checkout and branch**, cut from the contract commit, or from
   the commit the session started on when there is none, its checkout outside the repository's
   folder or in an ignored path (see *Parallel parts*). A part never cherry-picks. Only the
-  coordinator merges, onto a clean tree: one `--no-ff` merge per part, after the human's yes,
+  coordinator merges, onto a tree clean outside the shared documents (*Parallel parts*,
+  integration step 3): one `--no-ff` merge per part, after the human's yes,
   made with `--no-commit` and committed from a drafted message that `verify` has checked, never
   with git's own message. Part branches are never pushed. Right after the session commit they
   are deleted and their checkouts removed (*Parallel parts*, integration step 6).
@@ -522,7 +538,9 @@ conflict at every merge, so only the coordinator writes them, at integration.
     `feat: the search index for saved notes (part 8.2)`. The coordinator's own step before the
     merges ends `(<id>, before the merges)`, and its contract `(<id>, the parts' contract)`:
     `refactor: the search index's interface, stubbed (8, the parts' contract)`.
-  - `merge: part <id>.<n> — <what it adds>` for each part's merge.
+  - `merge: part <id>.<n> — <what it adds>` for each part's merge, and
+    `merge: the contract change — <what changed>` for each merge of a contract change.
+  - `docs: <id> paused at integration` for a session whose chat ends with parts still open.
   - `docs: <what it wrote> (x.y.z)` for the round's last session when its own work is
     documentation.
   - `review: <the findings, in plain words>, and <n> smaller` for the review commit.
@@ -531,9 +549,10 @@ conflict at every merge, so only the coordinator writes them, at integration.
 - **An approved push carries its own note.** The handoff was written before the push, so before
   pushing, the session rewrites the handoff's push status to say what the remote will hold,
   writes that commit's message into the draft (`git log -1 --format=%B`) and runs the
-  docs-only command with it (hygiene, plus the format check where it covers docs, not the full
-  `verify`: the note changes only the handoff), folds the note into the last unpushed commit
-  (`git commit --amend`; it is this session's own and not yet on the remote), lists
+  docs-only command with it (hygiene, plus the format check and lint where they cover docs,
+  not the full `verify`: the note changes only the handoff), folds the note into the last
+  unpushed commit (`git commit --amend`; it is this session's own and not yet on the remote),
+  lists
   `origin/main..HEAD` again, and pushes once. The note names that commit by its subject, since
   amending changes its sha. No commit follows the push, so the next session starts with
   `origin/main..HEAD` empty. If the push fails, amend the note back before anything else.
@@ -844,7 +863,8 @@ before the review commit. Leave out a line that has nothing in it.
   - <each new check: what was broken, and that it failed at its own step>.
 - **Numbers:** <n> unit tests (<±d>), <n> `<harness>` checks (<±d>), <the other baseline
   counts>.
-- **Parts** (<n>, run in parallel with the user's yes; cut from <the contract commit, by its
+- **Parts** (<n>, run in parallel with the user's yes; <the contract-change branch, if there
+  was one>; cut from <the contract commit, by its
   subject, or the commit the session started on>; merged in the order <id>.<n>, <id>.<n>):
   - **<id>.<n>, <title>,** on `<branch>`. <What it built, measured and falsified, from its
     note; each stop, who answered it and the answer; anything it could not finish.> Wall time
@@ -1051,7 +1071,7 @@ Decided by the user in plan mode, <YYYY-MM-DD>:
 ```markdown
 Read <the block's Read line, copied>, CLAUDE.md, docs/ARCHITECTURE.md's overview, invariants
 and baseline (once it exists), your block in docs/spec/SESSIONS.md and the previous block's
-done-note, then this file, and do Session <id>: <one line>. <id> has <n> parts:
+done-note, then this file, and do Session <id>: <one line>. <id> covers:
 - <part>;
 - <part>.
 
