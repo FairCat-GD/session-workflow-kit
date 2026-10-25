@@ -110,8 +110,8 @@ Session 1's block also takes *The hygiene stage's design*, below.
 ## Step 3: close Session 0
 
 - `git init` if needed, with a `.gitignore` suited to the stack that also keeps out what the
-  OS, editors and merges leave behind: `.DS_Store`, `Thumbs.db`, `*.swp`, `*~`, `*.orig` and
-  `*.rej`.
+  OS, editors and merges leave behind (`.DS_Store`, `Thumbs.db`, `*.swp`, `*~`, `*.orig`,
+  `*.rej`) and local secrets (`.env` and `.env.*`, with `!.env.example`).
 - Before the first commit, confirm `~/.claude/settings.json` has `"includeCoAuthoredBy": false`
   and `"attribution": { "commit": "", "pr": "" }`, so no commit or PR carries a Claude co-author
   line. If either is missing, tell me before committing. The settings keep attribution out at
@@ -156,21 +156,23 @@ how it is built.
 - **A routine run reads what a commit could still change:** the path and contents of each path
   that differs from `HEAD` in the index or the working tree, both versions, since they can
   differ; untracked files that are not ignored, so a new file is checked before it is staged;
-  the drafted commit message (`--message <file>`); and the messages of the commits on no remote
-  (`git log HEAD --not --remotes`), which is every commit when there is no remote. Files
-  containing NUL are skipped as binary, and submodule entries are skipped. A repository with no
-  commits yet passes.
+  the drafted commit message (`--message <file>`); the commits on no remote
+  (`git log HEAD --not --remotes`, which is every commit when there is no remote): their
+  messages, and the paths they changed as they stand at `HEAD`. Files containing NUL are
+  skipped as binary, a path no longer in the tree is skipped, and submodule entries are
+  skipped. A repository with no commits yet passes.
 - **A full scan reads everything:** every tracked file and every untracked one that is not
-  ignored, the staged contents of every path, and every message reachable from `HEAD`. It runs
-  when `--all` is given, or when the stamp `"$(git rev-parse --git-dir)/hygiene-scanned"` is
-  missing or older than the term list or the stage's own source. The stamp holds nothing: its
-  modification time is the record. A hit in a file or in a commit on no remote fails; a hit in
-  a pushed commit is listed under a heading of its own and does not fail. The stamp is renewed
-  after a full scan that does not fail. Tests build scratch repositories and never read or touch
-  the real stamp.
-- **Attribution is checked in messages:** a co-author trailer, a line saying an AI tool
-  generated the work, a link to an AI session. The patterns name the tools, so "generated with
-  the codegen script" passes.
+  ignored, the staged contents of every path, every message reachable from `HEAD`, and the
+  draft. It runs when `--all` is given, or when the stamp
+  `"$(git rev-parse --git-common-dir)/hygiene-scanned"` is missing or older than the term list
+  or the stage's own source; the common directory is shared by a repository's worktrees, so a
+  part's checkout does not scan again. The stamp holds nothing: its modification time is the
+  record. A hit in a file, in the draft or in a commit on no remote fails. A hit in a pushed
+  commit does not fail, and the stage's output ends with a line of its own counting them. The
+  stamp is renewed after a full scan that does not fail. Tests build scratch repositories and
+  never read or touch the real stamp.
+- **Attribution is checked in messages,** in the forms the workflow lists. The patterns name
+  the tools, so "generated with the codegen script" passes.
 - **Secrets have exact shapes,** each bounded by characters that cannot belong to it:
   - a private-key header: `-----BEGIN `, any words, then `PRIVATE KEY-----`;
   - an AWS access key id: `AKIA` or `ASIA`, then 16 capital letters or digits;
@@ -182,13 +184,13 @@ how it is built.
     `_` or `-`;
   - an OpenAI key: `sk-proj-`, `sk-svcacct-` or `sk-admin-`, then 40 or more letters, digits,
     `_` or `-`; or `sk-` and exactly 48 letters or digits;
-  - a tracked file named `.env` or `.env.<anything>`, except `.env.example`, `.env.sample` and
-    `.env.template`.
+  - a file named `.env` or `.env.<anything>` that a commit could record (tracked, staged, or
+    untracked and not ignored), except `.env.example`, `.env.sample` and `.env.template`.
 
   A dry run over real repositories found two families of false alarms in looser shapes and none
   in these: a bare `sk-` inside hyphenated names, and a `github_pat_` prefix in test fixtures.
-- **Conflict markers:** a line that starts with seven `<` or seven `>` and a space. A line of
-  seven `=` alone is not one; it underlines a Markdown heading.
+- **Conflict markers** are matched at the start of a line only, in the shapes the workflow
+  gives.
 - **It never holds what it bans.** The attribution patterns are assembled from pieces, so the
   stage's own source does not match them. Tests build their token-shaped strings and conflict
   markers from pieces at run time, so no file in the repository holds one.
@@ -209,10 +211,10 @@ how it is built.
     `sk-` and a `github_pat_TEST` fixture pass;
   - a conflict marker fails; a heading underline passes;
   - a change left unstaged is read; a routine run reads a commit on no remote and skips a
-    pushed one;
-  - a missing stamp, or a term list touched after it, turns a routine run into a full scan;
-    in a full scan, a hit in a pushed message is listed and passes, and a hit in a file fails
-    and leaves the stamp as it was.
+    pushed one; a file committed without the stage, in a commit on no remote, is read;
+  - a missing stamp, or a term list touched after it, turns a routine run into a full scan,
+    and that scan still reads the draft; in a full scan, a hit in a pushed message passes and
+    is counted on the last line, and a hit in a file fails and leaves the stamp as it was.
 
 ## `docs/spec/SPEC.md` template
 

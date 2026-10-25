@@ -592,17 +592,16 @@ files and messages, not author fields.
 
 **The hygiene stage of `verify` is the gate.** It holds only what a script decides with next
 to no false alarms, because a check that blocks a session for nothing teaches sessions to route
-around the gate. Each check names the failure it catches, and a hit on any of them fails the
-stage:
+around the gate. Each check names the failure it catches, and a hit fails the stage, except
+one in pushed history (see *The full scan*):
 - **Private terms,** from the owner's term list, in the files, paths and messages it reads.
 - **AI attribution** in commit messages: a co-author trailer, a line saying an AI tool generated
   the work, a link to an AI session.
 - **Secrets:** a private-key header, an access token in the exact shape its issuer gives it
-  (AWS, GitHub, Slack, Anthropic, OpenAI), and a tracked `.env` file (`.env.example` is fine).
-  A key in a pushed commit stays in history after it is revoked. The shapes are exact because
-  loose ones raise false alarms: a bare `sk-` prefix matches inside hyphenated names, and a
-  `github_pat_` prefix matches test fixtures. For the same reason there is no generic `key=`
-  pattern.
+  (AWS, GitHub, Slack, Anthropic, OpenAI), and a `.env` file a commit could record
+  (`.env.example` is fine). A key in a pushed commit stays in history after it is revoked. The
+  shapes are exact, and there is no generic `key=` pattern, because looser ones raise false
+  alarms.
 - **Conflict markers:** a line that starts with `<<<<<<< ` or `>>>>>>> `, left by a merge
   resolved by hand. In code they break the build, but in a document nothing else notices them.
   `=======` alone is not one: Markdown underlines headings with it.
@@ -631,18 +630,24 @@ what could still change:
   before the first push;
 - the files the commit could record: each path that differs from `HEAD` in the index or in
   the working tree, read in both, since they can differ, and each untracked file that is not
-  ignored, so a new file is checked before it is staged.
+  ignored, so a new file is checked before it is staged;
+- the files the commits on no remote changed, as they stand at `HEAD`, so a commit made without
+  `verify` (by hand, or by git's own merge) is caught before it is pushed.
 
-**The full scan reads every file and every commit message.** It runs only when it can find
-something new, and the stage tells when that is: it keeps a stamp in the git directory, beside
-`COMMIT_DRAFT` and never committed, and scans in full when the stamp is missing or older than
-the term list or the stage's own code. So Session 1's first run, a fresh clone, a part's new
-checkout, a term added in any project and a changed check each bring one full scan, without
-anyone having to remember it. `verify hygiene --all` runs one on demand. A hit in a file or in
-an unpushed message fails as usual. A hit in a pushed message is listed, and does not fail:
-history is never rewritten without the owner, so failing would only hold the gate red. The
-session tells the owner and records the listing in the handoff. The stamp is renewed after a
-full scan that does not fail.
+**The full scan reads every file and every commit message,** the draft included. It runs only
+when it can find something new, and the stage tells when that is: it keeps a stamp in the
+repository's shared git directory (`git rev-parse --git-common-dir`, so a part's checkout shares
+it), never committed, and scans in full when the stamp is missing or older than the term list
+or the stage's own code. So Session 1's first run, a fresh clone, a term added in any project
+and a changed check each bring one full scan, without anyone having to remember it.
+`verify hygiene --all` runs one on demand. A hit in a file or in an unpushed message fails as
+usual. A hit in a pushed message does not fail: history is never rewritten without the owner,
+so failing would only hold the gate red. The stage ends instead with a line of its own saying
+how many hits pushed history holds, and the session records them for the owner in the
+done-note and the handoff (a part, in its part note). The same goes for a full-scan hit in a
+file the session did not change: it is fixed like any other, and the owner hears of it, since
+its earlier versions may already be pushed. The stamp is renewed after a full scan that does
+not fail.
 
 **When it runs: once, as the last act before each commit, message included.** The session
 writes the done-note and the handoff, reads its diff once more for what no script judges
@@ -662,7 +667,8 @@ is amended for it. The review commit and the push note's amend go the same way.
 - no file the change made obsolete stays;
 - the docs that describe the change are true (the cycle, step 7).
 
-A finding is fixed, or left with its reason in the done-note, like a review finding.
+A finding is fixed, or left with its reason, like a review finding: in the done-note, or in the
+commit message where there is none (an intake, or a review after the close).
 
 **Watch for:**
 - **A commit message that quotes an attribution form,** even to describe this rule, fails the
@@ -1155,10 +1161,10 @@ Release <x.y.z>.
   - **Never `git checkout <path>`.** Falsify by copying the file aside and back.
   - **Stage explicit paths.**
   - **Give stdin-reading commands `< /dev/null`.** A bare `cat > file` with no heredoc hangs.
-  - **Nothing private in any file or commit message.** Last before each commit: draft the
-    message into `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the
-    docs-only command when the commit changes only docs), commit with `git commit -F`, delete
-    the draft.
+  - **Nothing private in any file or commit message.** Last before each commit: read the diff
+    once more for what no script judges, draft the message into
+    `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the docs-only command
+    when the commit changes only docs), commit with `git commit -F`, delete the draft.
   - <the environment's other gotchas, carried forward verbatim>.
 - **<A trap specific to this session>.** <Why it bites, and what to do instead.>
 - **Comments state the present.** No session ids, no "used to", no review stories.
@@ -1186,10 +1192,10 @@ and plan the round in `docs/spec/`, a Read line in every block (see
 ## Watch for
 
 - **The standing traps:**
-  - **Nothing private in any file or commit message.** Last before each commit: draft the
-    message into `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the
-    docs-only command when the commit changes only docs), commit with `git commit -F`, delete
-    the draft.
+  - **Nothing private in any file or commit message.** Last before each commit: read the diff
+    once more for what no script judges, draft the message into
+    `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the docs-only command
+    when the commit changes only docs), commit with `git commit -F`, delete the draft.
   - <the others, carried forward verbatim>.
 - **Comments state the present.** No session ids, no "used to", no review stories.
 ```
