@@ -114,8 +114,10 @@ Session 1's block also takes *The hygiene stage's design*, below.
   line. If either is missing, tell me before committing. The settings keep attribution out at
   the source; the hygiene stage catches it if they change.
 - Before the first commit, check every file you wrote, and the commit message, against the
-  term list (`grep -i -w -f ~/.config/hygiene/terms.txt`). The hygiene stage does not exist
-  yet; Session 1's first run checks this commit too.
+  term list. An empty list passes with nothing to check, so test for it first: some greps,
+  ugrep among them, match every line against an empty pattern file.
+  `[ ! -s ~/.config/hygiene/terms.txt ] || grep -n -i -w -f ~/.config/hygiene/terms.txt <files>`
+  The hygiene stage does not exist yet; Session 1's first run checks this commit too.
 - Commit locally with explicit paths: `docs: open round 1 — <product>`. Do not add a remote and
   do not push unless I ask.
 - I run `/code-review high` on the commit. It checks the spec and the plan for contradictions,
