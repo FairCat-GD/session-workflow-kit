@@ -32,14 +32,12 @@ list what it leaves underdetermined, including at least:
   a git remote, which decides pushes, tags and the changelog's links.
 - **Names.** The product's name, and the machine identifiers (package name, storage keys,
   bundle id) that must never change once data exists under them.
-- **Privacy.** Every repository is written as if its history will be published (the workflow's
-  *A clean repository*). Ask what is private beyond what is already public: my
-  name and email are on every commit as its author, so they count only if the commits use
-  another identity. Ask about other people, my unannounced projects or games, agent personas,
-  and what I publish on purpose (a copyright holder, a bundle id). The answer may be nothing.
-  My private terms live outside every repository, in `~/.config/hygiene/terms.txt`, one word
-  per line: check it exists (empty is fine), create it with my yes if it does not, and add
-  any new term I name, with my yes. No term, and no hash of one, enters the repository.
+- **Privacy** (the workflow's *A clean repository*). Ask what is private beyond what is
+  already public, and which git identity the commits use. Ask about other people, my
+  unannounced projects or games, agent personas, and what I publish on purpose (a copyright
+  holder, a bundle id). The answer may be nothing. Check `~/.config/hygiene/terms.txt` exists
+  (empty is fine), create it with my yes if it does not, and add any new term I name, with my
+  yes.
 
 Ask me in small batches. For every question, give your recommended answer and one line on why,
 so I can accept it quickly. Where the PDD contradicts itself, ask which part wins. Do not
@@ -49,8 +47,7 @@ move to step 2 until every open item is answered or explicitly deferred.
 
 This chat runs in plan mode like every session: once the intake is done, propose the documents
 below as your plan, and write them when I approve it. Use the templates at the end of
-`DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file, for every file that has one;
-Session 1's block also takes *The hygiene stage's design*, below.
+`DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file, for every file that has one.
 
 1. **`docs/spec/PDD.md`**: the draft as I gave it, frozen, with two edits only: private details
    are replaced by roles ("the owner", "the first game"), and lines crediting or addressing an
@@ -69,20 +66,11 @@ Session 1's block also takes *The hygiene stage's design*, below.
    of sessions with their versions, and one block per session with **Read**, **Scope**,
    **Docs**, **Gates** and **Watch for**.
    - **Session ids are numbers.** This chat is Session 0 and has no block; the plan starts at 1.
-   - **Every Read line names exactly what its session reads:** the spec's decisions and
-     invariants by number, its sections, and the draft's parts and items. You have read
-     everything; the session reads this first, then the rest of the workflow's read order (the
-     cycle, step 2).
-   - **Session 1 is always the scaffold** (`0.1.0`): everything in the workflow's *Day one*.
-     That is the skeleton, `verify` with its hygiene stage (its design copied into the block
-     from below) and each stage runnable by name, the version shown in the product,
-     `CHANGELOG.md` from the template, `tests/fixtures/`, `.claude/worktrees/` ignored, the
-     README, and the Commands table in `CLAUDE.md` with the docs-only command in it.
-   - **Every later session** is a vertical slice finishable in one chat, and a release (0.2.0,
-     0.3.0, …).
-   - **A plan of more than five sessions places an architecture review after each milestone**
-     (the workflow's *Rounds*). Each is a session of its own, with no version. Name the
-     milestones, and what the review measures against the sessions after it.
+   - **Session 1 is always the scaffold** (`0.1.0`): everything in the workflow's *Day one*,
+     with *The hygiene stage's design*, below, copied into its block. Its Read line also names
+     the workflow's *Day one* and *A clean repository*, which the design relies on.
+   - **Where the workflow's *Rounds* places architecture reviews,** name the milestones, and
+     what each review measures against the sessions after it.
    - **The last session of the round is the documentation pass,** and where each session is a
      release, it releases the round's last version:
      - `docs/ARCHITECTURE.md` from the template, with its baseline table;
@@ -90,9 +78,11 @@ Session 1's block also takes *The hygiene stage's design*, below.
      - the README;
      - `CLAUDE.md` repointed at the as-built documents;
      - anything still open moved to `docs/BACKLOG.md`;
-     - then the separate `docs: close round 1` commit.
+     - then, after its review, the separate `docs: close round 1` commit.
 4. **`CLAUDE.md`**, from the template below, filled in from the spec. Keep it lean: rules that
-   are always true, not history.
+   are always true, not history. Seed its *Do not* section with the standing traps already
+   known: `< /dev/null` for any shell command that reads stdin, and what the intake learned
+   about this machine, such as where the toolchain lives.
 5. **`docs/DEVELOPMENT-WORKFLOW.md`**: a verbatim copy of the file I gave you. If the intake
    decided this project deviates from it (no user guide, releases at milestones…), add the *In
    this repository* paragraph under its introduction and change nothing else.
@@ -101,11 +91,7 @@ Session 1's block also takes *The hygiene stage's design*, below.
    starts empty.
 7. **`docs/next-session-prompt.md`**: the prompt for Session 1, from the mid-round template.
    It has no previous session to report, so its state is what Session 0 decided that the spec
-   does not say. Seed its standing traps with what is already known:
-   - the git rules: stage explicit paths, never `git checkout <path>`;
-   - `< /dev/null` for any shell command that reads stdin;
-   - nothing private in any file or commit message;
-   - what the intake learned about this machine, such as where the toolchain lives.
+   does not say.
 
 ## Step 3: close Session 0
 
@@ -143,11 +129,10 @@ block as the stage's scope, and its last item into the block's gates; each part 
 someone found. What the stage checks and why is the workflow's *A clean repository*; this is
 how it is built.
 
-- **The terms come from `~/.config/hygiene/terms.txt`,** never from the repository: a hash of
-  a short word is reversed by hashing a dictionary of names, so not even hashes go in. A
-  missing file fails the stage; an empty one passes. Tests point the stage at a fixture file
-  of fictional terms, through a path argument or an environment variable, and never read the
-  owner's file.
+- **The terms come from `~/.config/hygiene/terms.txt`,** never from the repository, not even
+  as hashes. A missing file fails the stage; an empty one passes. Tests point the stage at a
+  fixture file of fictional terms, through a path argument or an environment variable, and
+  never read the owner's file.
 - **Each line is split into tokens:** runs of letters and digits in any script (an ASCII-only
   `[a-z0-9]+` misses a name written in Cyrillic), plus the camel-case words and digit groups
   inside each run, read before lowercasing, so a term in `myTermNotes` or `term2026` is still
@@ -312,8 +297,8 @@ the user** note; the wording above it stays.
 ## 6. Verification strategy
 
 **`verify` = `<command>`**: named stages, each failing on its own and runnable alone by name,
-then a summary. <The stages>, then hygiene. Green before every commit; a commit that changes only
-docs runs `<the docs-only command>`, the stages that read docs.
+then a summary. <The stages>, then hygiene. Green before every commit, or
+`<the docs-only command>` for a commit that changes only docs.
 
 | Layer | Runs | Covers | Cannot see |
 |---|---|---|---|
@@ -340,8 +325,8 @@ fail at its own step, restore it by editing or copying the file back.
 
 ## 9. Definition of done for v1
 
-1. Every block in `SESSIONS.md` has its done-note, and every block before the last its Review
-   section; every inserted session and amendment is logged with its reason.
+1. Every block in `SESSIONS.md` has its done-note with its Review section; every inserted
+   session and amendment is logged with its reason.
 2. <The product's own acceptance: what is built, and what passes>.
 3. `verify` is green and every harness passes, with the counts in `ARCHITECTURE.md`'s baseline.
 4. Every invariant's enforcement exists and is described in `ARCHITECTURE.md`.
@@ -368,26 +353,19 @@ changing code.** `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow th
 
 ## Working protocol
 
-Every session runs the cycle in `docs/DEVELOPMENT-WORKFLOW.md`: entry gate, read order, a plan
-agreed in plan mode, verify gate, docs kept true, changelog, a done-note in its `SESSIONS.md`
-block, handoff prompt for the next session, local commit, then the user's `/code-review high`,
-a review-fixes commit, and the one-line opener for the next session printed as the last
-message. One session per chat. A push or tag needs explicit approval, each time.
+Every session runs *The session cycle* in `docs/DEVELOPMENT-WORKFLOW.md`. One session per
+chat. A push or tag needs explicit approval, each time.
 
 **Scope lives in `docs/spec/SESSIONS.md`** (one block per session, in order) and the round's
 spec files (`SPEC.md` in round 1; after it, one `FEATURE-*.md` per request, holding the request
 verbatim plus the decisions resolved at intake — read-only, not re-litigated). `docs/spec/`
 holds only the round in progress: when a round closes its files are deleted (git history keeps
 them) and anything still open moves to `docs/BACKLOG.md`. **State lives in
-`docs/next-session-prompt.md`**, rewritten by every session as its last act. Read order: what
-the session block's **Read** line names, this file, `docs/ARCHITECTURE.md`'s overview,
-invariants and baseline (once it exists), the block itself and the previous done-note, then
-the prompt. The Read line is a floor: read further where the code leads.
+`docs/next-session-prompt.md`**, rewritten by every session as its last act.
 
 1. `<verify command>` (typecheck + lint + format check + tests + hygiene) must be green before
-   you commit. A commit that changes only docs runs `<the docs-only command>` instead; one that
-   changes code, a test, a fixture, a config, the manifest or a doc a test reads runs it all.
-   Run the heavier harnesses (`<harness commands>`) when your change could affect what they
+   you commit. A commit that changes only docs runs `<the docs-only command>` instead. Run the
+   heavier harnesses (`<harness commands>`) when your change could affect what they
    cover; expected results are in ARCHITECTURE.md's baseline table.
 2. Falsify any new check before trusting it: break the assertion, watch it fail at its own
    step, restore it.
@@ -424,10 +402,8 @@ commit message follows these rules:
   private goes on the term list.
 
 <What the owner publishes on purpose, e.g. the copyright holder and the bundle id.> The
-hygiene stage of `verify` (`<hygiene command>`) checks what a commit records, its message and
-the commits not yet pushed: against the term list in `~/.config/hygiene/terms.txt`, outside the
-repository, for attribution in messages, for secrets and for conflict markers. It reads every
-file and message once after the term list or the stage changes.
+hygiene stage of `verify` (`<hygiene command>`) enforces these, against the term list in
+`~/.config/hygiene/terms.txt`.
 
 ## Commands
 
@@ -435,7 +411,7 @@ file and message once after the term list or the stage changes.
 |---|---|
 | <filled in by Session 1> | |
 | `<the docs-only command>` | The stages that read docs, for a commit that changes only docs: hygiene, plus <the format check and lint, where they cover them> |
-| `<verify command> hygiene --all` | Hygiene's full scan: every file and every commit message. It runs by itself after the term list or the stage changes; a hit in a pushed commit is listed for the owner and does not fail |
+| `<verify command> hygiene --all` | Hygiene's full scan, on demand; it also runs by itself when the term list or the stage changes |
 
 <Below the table, what a session would otherwise learn the hard way about running them: what
 the unit tests cannot see and which harness can; that no harness touches a person's real data;
@@ -458,9 +434,14 @@ runs them; the session's integration does.
 
 ## Do not
 
+One line each. A trap goes in once it has cost a session time, and comes out once a check, a
+script or a pin makes it impossible.
+
 - <Stack-specific traps and forbidden moves, e.g. editing an applied migration, upgrading a
   pinned dependency in passing, touching a person's real data from a test, renaming a machine
   identifier.>
+- <The environment's standing traps, e.g. give a shell command that reads stdin `< /dev/null`;
+  where the toolchain lives.>
 - Do not finish with `<verify command>` red, or with user-visible changes missing from
   `CHANGELOG.md`.
 ```

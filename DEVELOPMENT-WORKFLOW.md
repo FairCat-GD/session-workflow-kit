@@ -8,8 +8,7 @@ scope, the current state and the known pitfalls. The same discipline suits human
 turnover or long gaps between working periods.
 
 Use it for any project expected to outlast its author's working memory. It is more process than
-a weekend prototype needs. If you adopt only part of it, keep the split between scope and state
-and the handoff rules; they are what keep a long build on track.
+a weekend prototype needs.
 
 This file is copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`, templates
 included. The one edit a project makes to it is an **In this repository** paragraph here, under
@@ -28,7 +27,7 @@ project's own standing rules live in its `CLAUDE.md`, not here.
 | `docs/ARCHITECTURE.md` | the system **as built**: its invariants, its deliberate decisions, its known debt and the baseline counts | written by round 1's documentation pass; kept true by every session after |
 | `docs/USER-GUIDE.md` | behaviour from the user's side | written by round 1's documentation pass; kept true by every session after |
 | `README.md` | what the thing is, how to run it, where the docs are | written by Session 1; kept true |
-| `docs/DEVELOPMENT-WORKFLOW.md` | this file: the method and its templates | copied verbatim; changes only with the kit |
+| `docs/DEVELOPMENT-WORKFLOW.md` | this file: the method and its templates | copied verbatim at Session 0; only its *In this repository* paragraph is the project's |
 
 **Scope and state are different jobs, and the split is what makes the workflow hold.** Scope
 (`SESSIONS.md`) is fixed in advance, so no session can quietly redefine what a later one owes.
@@ -94,7 +93,7 @@ However it starts, it goes through an intake.
 
    A session should be finishable in one chat with every gate green, and deliver a vertical
    slice rather than one layer.
-   - **A round of more than five sessions places an architecture review after each
+   - **A round of more than five build sessions places an architecture review after each
      milestone**, a point where a layer that later sessions build on is finished. A session's
      review sees one diff; an architecture review reads the code of every session so far, cold,
      against the spec, and finds the drift between sessions that no diff shows. It is a session
@@ -126,12 +125,11 @@ However it starts, it goes through an intake.
      version even when its own work is documentation, so every round ends on a version a person
      can name and a milestone's tag can mark. A project that releases at milestones cuts one
      only when the round ends on a milestone.
-   - **The release commit comes first, with the last done-note in it.** Then a separate
+   - **The close comes last, after the review.** The release commit and its `review:` commit
+     come first, with the last done-note complete in them. Then a separate
      `docs: close round <N>` commit deletes `docs/spec/`'s files and rewrites the handoff to
-     say no round is in progress. Git history keeps the specs, and the release commit is where
-     the last done-note can still be read in full; the handoff names that commit.
-   - **The review follows the close.** `SESSIONS.md` is gone by then, so the findings are
-     recorded in the review commit's message and in the handoff.
+     say no round is in progress. Git history keeps the specs; the review commit is where the
+     last done-note can still be read in full, and the handoff names that commit.
    - **Round 1 also owes a documentation pass**, planned as a real session, usually its last:
      - `docs/ARCHITECTURE.md` (the system as built, the invariants, the deliberate
        decisions, the known debt, a baseline table of counts);
@@ -151,18 +149,14 @@ Each of these is cheap on day one and expensive to retrofit.
 
 - **One verification command.** `verify` = typecheck + lint + format check + tests + hygiene.
   Formatting is in the gate from the first commit. It also runs named stages alone
-  (`verify hygiene --message <draft>`), so a commit that changes only docs runs only the stages
-  that read them (the cycle, step 6).
-- **The hygiene stage** (see *A clean repository*), reading the owner's term list. Its first
-  run is a full scan, since it has no stamp yet, so Session 0's commit is checked too.
-- **The gate is held by the session and the human; there is no CI.** `verify` is green before
-  every commit (only the docs stages, for a commit that changes only docs), the human reviews
-  every session, and nothing reaches the remote without their
-  approval.
+  (`verify hygiene --message <draft>`), so the docs-only command (the cycle, step 6) is one
+  call, such as `verify format hygiene --message <draft>`.
+- **The hygiene stage** (see *A clean repository*), reading the owner's term list.
 - **Version and changelog.** Stamp `0.1.0` in the manifest, surface it in the product, and
   start `CHANGELOG.md` from the template, with an empty `[Unreleased]` section.
-- **A fixtures directory** (`tests/fixtures/`). Tests never read documentation or design
-  assets; a test that depends on a mockup makes the mockup undeletable.
+- **A fixtures directory** (`tests/fixtures/`). Tests never read design assets or prose
+  documentation; a test that depends on a mockup makes the mockup undeletable. A README whose
+  examples run as doctests is code.
 - **Fictional test data only.** No real names, no real content, no author's identity and no
   home-directory paths in fixtures or seeds.
 - **Checkout tuning lives in the repo.** Anything set in `.git/config` or an editor does not
@@ -174,9 +168,7 @@ Each of these is cheap on day one and expensive to retrofit.
   inside such a checkout and must still read its files.
 - **A truthful README**: what the thing is, how to run it, and where the docs are.
 - **The Commands table in `CLAUDE.md`**, filled in: every script a session runs, one line
-  each on what it does. It names the docs-only command too: the stages that read docs, hygiene
-  plus the format check and lint where they cover them
-  (`verify format hygiene --message <draft>`).
+  each on what it does, the docs-only command included.
 
 ## The session cycle
 
@@ -188,17 +180,14 @@ the repository.
    about to do, and, unless this is the round's first session, the previous session's block in
    `SESSIONS.md` has its done-note. If it does not, that session did not finish; do not stack
    on it. A session the handoff says paused at integration is the exception: it resumes, and
-   its open parts, named in the handoff, stay. Then check that no parallel part was left
-   behind: where the previous done-note has a *Parts* section, the branches it names (the
-   parts' and any contract change's) and their checkouts are gone (`git branch`,
-   `git worktree list`). An intake finds that done-note in the release commit its handoff names
-   (`git show <sha>:docs/spec/SESSIONS.md`). Remove any that remain the way integration does
-   (*Parallel parts*, integration step 6), and take what git refuses to the human; a branch the
-   done-note lists as kept stays. A branch or checkout no done-note names is not this
-   session's: leave it.
-2. **Read in order:**
+   its open parts, named in the handoff, stay. Then, where the previous done-note has a
+   *Parts* section, check that nothing it names was left behind (*Parallel parts*, integration
+   step 6).
+2. **Read in order** (the handoff's first line copies this order, so the rest of the handoff
+   comes last):
    - what the block's **Read** line names, in full;
    - `CLAUDE.md`, which carries every invariant;
+   - this file's *The session cycle*, and a section it points to when a step needs it;
    - `docs/ARCHITECTURE.md` (once it exists): its overview, invariants and baseline, plus the
      sections the Read line names;
    - from `SESSIONS.md`, its header, this session's block and the previous block's done-note;
@@ -209,8 +198,7 @@ the repository.
    about ground the session does not touch. The invariants are always in view through
    `CLAUDE.md`, and a long round's milestone reviews read everything (see *Rounds*). The Read
    line is a floor, not a ceiling: where the code leads somewhere it does not name, read that
-   too. An intake has no block yet: it reads what the between-rounds prompt names. The prompt
-   adds context; it never replaces the sources.
+   too. An intake has no block yet: it reads what the between-rounds prompt names.
 3. **Plan with the human before any edit.** In plan mode, read the code the block points at
    and propose a concrete plan. Ask the block's *Ask at the start* questions here, and agree
    here on anything the plan changes about the block. Those changes are logged as amendments
@@ -230,14 +218,10 @@ the repository.
    it.
 6. **Verification gate.** `verify` is green before the session may commit. Run the harnesses
    the block names (UI, end-to-end, runtime probes), and any other whose ground the change
-   covers. Falsify every new check before trusting it. A commit that changes only docs runs
-   only the stages that read what changed: the docs-only command in `CLAUDE.md`, which is
-   hygiene, plus the format check and lint where they cover docs. A file that a test or a build
-   reads, such as a README whose examples run as doctests, is not docs for this rule; no test
-   reads the rest (*Day one*), so the other stages have nothing new to check. A commit that
-   changes anything
-   else (code, a test, a fixture, a config, the manifest) runs the full `verify`, and so does
-   every merge.
+   covers. Falsify every new check before trusting it. A commit that changes only docs, meaning
+   files no test or build reads, runs the docs-only command in `CLAUDE.md` instead: hygiene,
+   plus the format check and lint where they cover docs. Anything else, and every merge, runs
+   the full `verify`.
 7. **Keep the docs true**, in the same commit as the code:
    - `CHANGELOG.md`: an entry for everything user-visible, under the session's version, and
      the version bumped in the manifest (see *Versions and the changelog*);
@@ -245,7 +229,7 @@ the repository.
      known debt, and the baseline table for every count that moved;
    - `docs/USER-GUIDE.md`, for any behaviour a user now sees differently;
    - `README.md`, when what the thing is, how it runs, or a number it states changes;
-   - `CLAUDE.md`, when a standing rule, a command or a pin changes;
+   - `CLAUDE.md`, when a standing rule, a command, a pin or a standing trap changes;
    - `docs/BACKLOG.md`, for anything the session deferred or could not check by hand.
 
    The block's **Docs** line names the ones the plan expected; it is a floor, not a ceiling.
@@ -258,26 +242,23 @@ the repository.
    - what was falsified;
    - the numbers, with their deltas.
 9. **Handoff.** Rewrite `docs/next-session-prompt.md` for the next session.
-10. **Commit locally**: one commit for the session's work, and in the round's last session the
-    close commit after it. A session that ran parallel parts has its contract, the parts'
-    commits and the merges before it (see *Parallel parts*). The last act before each commit is
-    `verify` run with its drafted message (the docs-only command, for a commit that changes
-    only docs; step 6), after the done-note and the handoff are written and the diff has had
-    its last read, so they are checked too (see *A clean repository*). Never push without
-    explicit approval for that specific push, and never tag without approval for that tag.
+10. **Commit locally**: one commit for the session's work. A session that ran parallel parts
+    has its contract, the parts' commits and the merges before it (see *Parallel parts*). The
+    last act before each commit is `verify` run with its drafted message (*A clean
+    repository*, "When it runs"). Never push without explicit approval for that specific push,
+    and never tag without approval for that tag.
 11. **Review.** The human runs a code review over the session's commit at high effort, in the
     same chat (in Claude Code, `/code-review high`); after parallel parts it covers the
-    contract, the parts' commits and the merges too. In the round's last session that is the
-    release commit; the close after it only deletes. Fix what it finds. A finding that changes
-    behaviour or scope is the human's call, and a finding left unfixed is recorded as skipped,
-    with its reason. Falsify the checks the fixes add. Then:
+    contract, the parts' commits and the merges too, because integration bugs show only in the
+    combined code. Fix what it finds. A finding that changes behaviour or scope is the human's
+    call, and a finding left unfixed is recorded as skipped, with its reason. Falsify the
+    checks the fixes add. Then:
     - add a **Review** section to the done-note: the findings, what was fixed and what was
-      skipped, what was falsified, and the numbers after the review. In the round's last
-      session the close has already deleted `SESSIONS.md`, so that section's content goes into
-      the review commit's message and the handoff instead (see *Rounds*);
+      skipped, what was falsified, and the numbers after the review;
     - update that version's CHANGELOG entry and the docs the fixes touched (no new version);
     - update the handoff for anything the review changed, including a session it opened;
-    - commit the fixes as a separate `review:` commit.
+    - commit the fixes as a separate `review:` commit;
+    - in the round's last session, then make the close commit (see *Rounds*).
 
     Expect it to find something; the worst finds are routinely in code the session had just
     called safe.
@@ -449,10 +430,12 @@ conflict at every merge, so only the coordinator writes them, at integration.
    human's yes, asked before the session commit; a branch they keep is listed as kept in the
    done-note's *Parts* section. A branch kept after a refusal here is recorded there by the
    review commit, which adds to the done-note anyway. The next session's entry gate checks
-   that nothing else is left.
-7. **Review as one session.** The human's review (the cycle, step 11) covers the contract, every
-   part's commits, the merges and the session commit together, because integration bugs show
-   only in the combined code.
+   that nothing else is left: the branches the *Parts* section names (the parts' and any
+   contract change's) and their checkouts are gone (`git branch`, `git worktree list`). An
+   intake finds that done-note in the review commit its handoff names
+   (`git show <sha>:docs/spec/SESSIONS.md`). What remains is removed the same way, what git
+   refuses goes to the human, and a branch listed as kept stays. A branch or checkout no
+   done-note names is not the session's to remove: leave it.
 
 **Limits.**
 - **At most three parts per session,** to begin with. Each is another chat the human may need to
@@ -463,26 +446,20 @@ conflict at every merge, so only the coordinator writes them, at integration.
 
 ## What each commit touches
 
+Each commit's subject is in *Git*.
+
 | Commit | Adds | Updates | Removes |
 |---|---|---|---|
-| **Intake**: `docs: open round <N> — <theme>` | the round's spec files and `SESSIONS.md` | `docs/BACKLOG.md` (what the intake declined); the handoff, which now opens the first session | from `docs/BACKLOG.md`, the items the round picked up |
-| **Contract** for a session's parts: `feat:` or `refactor:`, ending `(<id>, the parts' contract)` | the interfaces the parts meet at, as code: types, signatures and stubs that fail if called | the shared registries, with the entries the parts would each add, pointing at the stubs | — |
-| **Part** of a session: `feat:`, `fix:` or `refactor:`, ending `(part <id>.<n>)` | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
-| **Session**: `feat:`, `fix:` or `refactor:`, ending `(x.y.z)` | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
-| **Review**: `review: …` | the fixes and their tests; the done-note's Review section (after a close, the commit message carries it) | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
-| **Architecture review**: `docs: architecture review — <milestone>` | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
-| **Close**: `docs: close round <N>` | — | the handoff, which now says no round is in progress | every file in `docs/spec/` |
+| **Intake** | the round's spec files and `SESSIONS.md` | `docs/BACKLOG.md` (what the intake declined); the handoff, which now opens the first session | from `docs/BACKLOG.md`, the items the round picked up |
+| **Contract** for a session's parts | the interfaces the parts meet at, as code: types, signatures and stubs that fail if called | the shared registries, with the entries the parts would each add, pointing at the stubs | — |
+| **Part** of a session | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
+| **Session** | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
+| **Review** | the fixes and their tests; the done-note's Review section | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
+| **Architecture review** | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
+| **Close**, after the round's last review | — | the handoff, which now says no round is in progress | every file in `docs/spec/` |
 
-- **After parallel parts,** the contract (when the parts meet at an interface), the
-  coordinator's own work commit (if it did a sequential step) and one `--no-ff` merge per part
-  come first, each typed and checked like any commit. The
-  session commit follows them with the integration's fixes, the version and the shared
-  documents (see *Parallel parts*).
 - **An intake's review** fixes the spec and the plan. It has no CHANGELOG entry and no version.
   Neither has an architecture review, whose `/code-review` follows like any session's.
-- **A session nobody can see** (docs, comments, an invisible refactor) has no CHANGELOG entry
-  and no version bump, and its subject carries no version. Where each session is a release,
-  the round's last session is the exception: it releases the round (see *Rounds*).
 - **Before round 1's documentation pass**, `ARCHITECTURE.md` and `USER-GUIDE.md` do not exist
   yet. Sessions keep the README and `CLAUDE.md` true, and their done-notes carry what the pass
   will need: the deliberate decisions and the counts.
@@ -500,8 +477,8 @@ conflict at every merge, so only the coordinator writes them, at integration.
 3. **The plan is amendable, but every amendment carries a reason, logged.** An unexplained
    scope change six sessions deep is indistinguishable from a session quietly dropping work
    it could not finish.
-4. **Nothing ships past a red gate.** `verify` green is the condition for every commit; a commit
-   that changes only docs needs only the stages that read them (the cycle, step 6). No CI
+4. **Nothing ships past a red gate.** `verify` green, or the docs-only command for a commit
+   that changes only docs, is the condition for every commit (the cycle, step 6). No CI
    enforces it; the session does, and the human's review and push approval stand behind it.
 5. **Every session ends with a done-note, a handoff and a commit.** No exceptions for short
    sessions. An intake's plan stands in for its done-note.
@@ -518,14 +495,8 @@ conflict at every merge, so only the coordinator writes them, at integration.
   If a commit is not this session's, stop and say so. A session's contract, its part commits,
   its work commit before the merges and the merges are its own.
 - **Stage explicit paths; never `git add -A`.** Same reason.
-- **Each parallel part has its own checkout and branch**, cut from the contract commit, or from
-  the commit the session started on when there is none, its checkout outside the repository's
-  folder or in an ignored path (see *Parallel parts*). A part never cherry-picks. Only the
-  coordinator merges, onto a tree clean outside the shared documents (*Parallel parts*,
-  integration step 3): one `--no-ff` merge per part, after the human's yes,
-  made with `--no-commit` and committed from a drafted message that `verify` has checked, never
-  with git's own message. Part branches are never pushed. Right after the session commit they
-  are deleted and their checkouts removed (*Parallel parts*, integration step 6).
+- **Part branches** are merged only by the coordinator, never with git's own message, and
+  never pushed (*Parallel parts*).
 - **Never undo with `git checkout <path>`.** It silently discards changes that may not be
   yours. Revert your own edits by editing, and falsify a check by copying the file aside and
   back.
@@ -549,13 +520,12 @@ conflict at every merge, so only the coordinator writes them, at integration.
 - **An approved push carries its own note.** The handoff was written before the push, so before
   pushing, the session rewrites the handoff's push status to say what the remote will hold,
   writes that commit's message into the draft (`git log -1 --format=%B`) and runs the
-  docs-only command with it (hygiene, plus the format check and lint where they cover docs,
-  not the full `verify`: the note changes only the handoff), folds the note into the last
-  unpushed commit (`git commit --amend`; it is this session's own and not yet on the remote),
-  lists
-  `origin/main..HEAD` again, and pushes once. The note names that commit by its subject, since
-  amending changes its sha. No commit follows the push, so the next session starts with
-  `origin/main..HEAD` empty. If the push fails, amend the note back before anything else.
+  docs-only command with it, since the note changes only the handoff. It folds the note into
+  the last unpushed commit (`git commit --amend`; it is this session's own and not yet on the
+  remote), lists `origin/main..HEAD` again, and pushes once. The note names that commit by its
+  subject, since amending changes its sha. No commit follows the push, so the next session
+  starts with `origin/main..HEAD` empty. If the push fails, amend the note back before anything
+  else.
 - **Tags mark milestones only**, such as a first build for testers or 1.0, and the intake names
   them: the session table marks a milestone's version as tagged. The session that cuts it asks
   before tagging; on a yes it tags locally, and the tag is pushed only with its own approval.
@@ -612,9 +582,9 @@ code holds the design, and ARCHITECTURE's testing strategy describes it.
 - **The term list lives outside every repository,** in one plain-text file,
   `~/.config/hygiene/terms.txt`: one word per line, shared by all of the owner's projects,
   because a name private in one is private in all. No repository holds the terms, nor hashes
-  of them. A missing file fails the stage, so a new machine cannot pass by accident; copying
-  that one file is the whole setup. An empty file is a valid answer: nothing is private beyond
-  what is already public.
+  of them: a short word's hash is reversed by hashing a dictionary of names. A missing file
+  fails the stage, so a new machine cannot pass by accident; copying that one file is the whole
+  setup. An empty file is a valid answer: nothing is private beyond what is already public.
 - **A term is one word.** A two-word or hyphenated name is given as its words, leaving out any
   that is an ordinary word on its own. The owner edits the file, or names a new term in chat
   and the session adds it with their yes. Either way, each project's next run reads everything
@@ -622,32 +592,22 @@ code holds the design, and ARCHITECTURE's testing strategy describes it.
 - **A hit never prints the term or the secret.** It names the file and line, or the commit and
   message line; the line itself shows what it is.
 
-**What each run reads.** Rereading what already passed finds nothing new, so a run reads only
-what could still change:
-- the drafted message;
-- the commits on no remote yet (`git log HEAD --not --remotes`), which also covers a branch
-  with no upstream, such as a part's; with no remote at all, every commit, which is little
-  before the first push;
-- the files the commit could record: each path that differs from `HEAD` in the index or in
-  the working tree, read in both, since they can differ, and each untracked file that is not
-  ignored, so a new file is checked before it is staged;
-- the files the commits on no remote changed, as they stand at `HEAD`, so a commit made without
-  `verify` (by hand, or by git's own merge) is caught before it is pushed.
+**What each run reads.** Rereading what already passed finds nothing new, so a routine run
+reads only what a commit could still change: the drafted message, the files the commit could
+record (staged, unstaged, and untracked but not ignored), and the commits on no remote yet,
+with the files they changed as they stand now, so a commit made without `verify` (by hand, or
+by git's own merge) is caught before it is pushed.
 
-**The full scan reads every file and every commit message,** the draft included. It runs only
-when it can find something new, and the stage tells when that is: it keeps a stamp in the
-repository's shared git directory (`git rev-parse --git-common-dir`, so a part's checkout shares
-it), never committed, and scans in full when the stamp is missing or older than the term list
-or the stage's own code. So Session 1's first run, a fresh clone, a term added in any project
-and a changed check each bring one full scan, without anyone having to remember it.
-`verify hygiene --all` runs one on demand. A hit in a file or in an unpushed message fails as
-usual. A hit in a pushed message does not fail: history is never rewritten without the owner,
-so failing would only hold the gate red. The stage ends instead with a line of its own saying
-how many hits pushed history holds, and the session records them for the owner in the
-done-note and the handoff (a part, in its part note). The same goes for a full-scan hit in a
-file the session did not change: it is fixed like any other, and the owner hears of it, since
-its earlier versions may already be pushed. The stamp is renewed after a full scan that does
-not fail.
+**The full scan reads every file and every commit message,** the draft included. It runs by
+itself when it can find something new: on a fresh clone, and after the term list or the
+stage's own code changes, so a term added in any project brings one full scan in each without
+anyone having to remember it. `verify hygiene --all` runs one on demand. A hit in a pushed
+message does not fail: history is never rewritten without the owner, so failing would only
+hold the gate red. The stage ends instead with a line of its own saying how many hits pushed
+history holds, and the session records them for the owner in the done-note and the handoff (a
+part, in its part note). A full-scan hit in a file fails like any other and is fixed; when the
+session did not change that file, the owner hears of it too, since its earlier versions may
+already be pushed.
 
 **When it runs: once, as the last act before each commit, message included.** The session
 writes the done-note and the handoff, reads its diff once more for what no script judges
@@ -668,7 +628,7 @@ is amended for it. The review commit and the push note's amend go the same way.
 - the docs that describe the change are true (the cycle, step 7).
 
 A finding is fixed, or left with its reason, like a review finding: in the done-note, or in the
-commit message where there is none (an intake, or a review after the close).
+commit message where there is none (an intake and its review, or the close).
 
 **Watch for:**
 - **A commit message that quotes an attribution form,** even to describe this rule, fails the
@@ -721,11 +681,11 @@ as committed. It holds:
   - decisions made that are written down nowhere else;
   - the baseline counts this session must not move, or must move by a stated amount;
   - what was not done, and why.
-- **Watch for:**
-  - **the standing traps**, the environment's gotchas that every session hits (the shell, the
-    toolchain, the harnesses, git). They are carried forward verbatim from handoff to handoff,
-    and edited only when one stops being true, or when a new one has cost a session time;
-  - this session's own traps: the block's, plus anything newly discovered.
+- **Watch for:** this session's own traps, the block's plus anything newly discovered. The
+  standing traps, the environment's gotchas that every session hits (the shell, the toolchain,
+  the harnesses, git), live in `CLAUDE.md`'s *Do not* section instead, one line each: added
+  once one has cost a session time, removed once a check, a script or a pin makes it
+  impossible.
 
 Two rules govern it:
 
@@ -774,8 +734,9 @@ and the next session is an intake.
   a review story; git history and the done-notes keep those. Where the story *is* the reason,
   keep one clause.
 - **"Watch for" lines.** Every session block ends with its specific traps, because traps are
-  what a fresh context misses. When a trap costs a session an hour anyway, the next prompt
-  names it.
+  what a fresh context misses. When a trap costs a session an hour anyway, it goes into
+  `CLAUDE.md`'s *Do not* section if every session can hit it, or into the next prompt if only
+  the next session will.
 - **Deviations over corrections.** When mockups, spec and build disagree, resolve the conflict
   once, write down which one wins and why, and leave the artifacts as they are.
 - **Keep the rules file lean.** `CLAUDE.md` holds what is always true; the done-notes and
@@ -814,9 +775,7 @@ this repository* paragraph.
   - headless drivability, which matters only where there is something to drive;
   - the git remote, which decides pushes, tags and changelog links;
   - CI, which this workflow does not use; a project that adds it says so;
-  - parallel parts, which are optional (see *Parallel parts*), and the project's exclusive
-    resources, named in `CLAUDE.md`: the harnesses, apps, ports and devices only one chat can
-    use at a time.
+  - parallel parts, which are optional (see *Parallel parts*).
 
 ## Templates
 
@@ -825,42 +784,17 @@ real wording, to be kept unless it is wrong for the project.
 
 ### `docs/spec/SESSIONS.md`: the header and the table
 
-In round 1 the spec files are `SPEC.md` and `PDD.md`, and the read order drops
-`docs/ARCHITECTURE.md` until the documentation pass writes it.
+In round 1 the spec files are `SPEC.md` and `PDD.md`.
 
 ```markdown
 # The session plan: round <N>, <theme>
 
-One chat per session. Never run two sessions in one chat: the point of the split is that no
-session inherits stale context.
-
-- **Scope** lives here, fixed in advance. The request and its resolved decisions are in
-  `<FEATURE-name.md>` beside this file, which is read-only; do not re-litigate them. If a
-  session finds a block wrong, it amends the block and records the reason both in the block
-  and in `docs/next-session-prompt.md`.
-- **State** is `CHANGELOG.md` (what shipped) and `docs/next-session-prompt.md` (what the next
-  session needs that the docs do not say). Every session rewrites the prompt as its last act.
-- **When this round closes,** <last id> deletes this file and the feature file(s). Git history
-  keeps them, and anything left open moves to `docs/BACKLOG.md`.
-
-**Before starting**, confirm the tree is clean and that `docs/next-session-prompt.md` names the
-session you are about to do. **Read** in the workflow's order (the cycle, step 2), starting
-with what your block's **Read** line names. **Then plan, in plan mode,** and ask the block's
-*Ask at the start* questions before any edit.
-
-**Every session ends the same way:**
-1. `<verify command>` green, plus the harnesses the block names; for a commit that changes only
-   docs, `<the docs-only command>`.
-2. Every new check falsified.
-3. A `CHANGELOG.md` entry for anything user-visible, and the version bumped as the table says.
-4. The docs the block names kept true, and ARCHITECTURE's baseline table updated for any count
-   that moved.
-5. A done-note appended to the block, then the prompt rewritten, then the same command run
-   with the drafted commit message, then a local commit.
-6. The user's `/code-review high`, then a review-fixes commit.
-7. The one-line opener for the next session printed as the chat's last message.
-
-Never push without being asked.
+One block per session, in order, each run by *The session cycle* in
+`docs/DEVELOPMENT-WORKFLOW.md`. The request and its resolved decisions are in
+`<FEATURE-name.md>` beside this file, which is read-only; do not re-litigate them. A session
+that finds its block wrong amends it and records the reason in the block and in
+`docs/next-session-prompt.md`. <last id> closes the round: it deletes this file and the
+feature file(s), and anything left open moves to `docs/BACKLOG.md`.
 
 | Session | Scope | Decisions | Version |
 |---|---|---|---|
@@ -1131,9 +1065,10 @@ Decided by the user in plan mode, <YYYY-MM-DD>:
 ### `docs/next-session-prompt.md`, mid-round
 
 ```markdown
-Read <the block's Read line, copied>, CLAUDE.md, docs/ARCHITECTURE.md's overview, invariants
-and baseline (once it exists), your block in docs/spec/SESSIONS.md and the previous block's
-done-note, then this file, and do Session <id>: <one line>. <id> covers:
+Read <the block's Read line, copied>, CLAUDE.md, *The session cycle* in
+docs/DEVELOPMENT-WORKFLOW.md, docs/ARCHITECTURE.md's overview, invariants and baseline (once it
+exists), your block in docs/spec/SESSIONS.md and the previous block's done-note, then this
+file, and do Session <id>: <one line>. <id> covers:
 - <part>;
 - <part>.
 
@@ -1143,7 +1078,7 @@ Release <x.y.z>.
 
 - **Round <N> is <theme>**: <ids> are done; <ids> remain.
 - **<Previous id> and its review fixes are committed locally, not pushed.** `origin/main` holds
-  everything through `<sha>`. List `origin/main..HEAD` before any push.
+  everything through `<sha>`.
 - **What <previous id> left that <id> builds on:**
   - <the names, files and mechanisms this session will touch, as they are now>.
 - **What the spec said that turned out wrong or harder:** <specifically>.
@@ -1157,26 +1092,15 @@ Release <x.y.z>.
 
 ## Watch for
 
-- **The standing traps:**
-  - **Never `git checkout <path>`.** Falsify by copying the file aside and back.
-  - **Stage explicit paths.**
-  - **Give stdin-reading commands `< /dev/null`.** A bare `cat > file` with no heredoc hangs.
-  - **Nothing private in any file or commit message.** Last before each commit: read the diff
-    once more for what no script judges, draft the message into
-    `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the docs-only command
-    when the commit changes only docs), commit with `git commit -F`, delete the draft.
-  - <the environment's other gotchas, carried forward verbatim>.
 - **<A trap specific to this session>.** <Why it bites, and what to do instead.>
-- **Comments state the present.** No session ids, no "used to", no review stories.
-- **Every push needs its own approval.** List `origin/main..HEAD` first, because parallel
-  sessions share this checkout.
 ```
 
 ### `docs/next-session-prompt.md`, between rounds
 
 ```markdown
-No round is in progress. Read CLAUDE.md, docs/ARCHITECTURE.md's overview, invariants and
-baseline, then this file; then the sections of docs/ARCHITECTURE.md the request touches. The
+No round is in progress. Read CLAUDE.md, *The session cycle* in docs/DEVELOPMENT-WORKFLOW.md,
+docs/ARCHITECTURE.md's overview, invariants and baseline, then this file; then the sections of
+docs/ARCHITECTURE.md the request touches. The
 next session is an **intake**: write the user's request down verbatim, ask what it leaves open,
 and plan the round in `docs/spec/`, a Read line in every block (see
 `docs/DEVELOPMENT-WORKFLOW.md`, *Rounds*).
@@ -1184,20 +1108,15 @@ and plan the round in `docs/spec/`, a Read line in every block (see
 ## State you need that is not in the docs
 
 - **<Product> <x.y.z> is released.** Round <N> (<theme>: <ids>) is closed. Its spec files are
-  deleted; the last done-note is in `docs/spec/SESSIONS.md` as of the release commit (`<sha>`).
+  deleted; the last done-note is in `docs/spec/SESSIONS.md` as of the review commit before the
+  close (`<sha>`).
 - **Push status:** <what the remote holds, and what waits for the next approved push>.
 - **Open items live in `docs/BACKLOG.md`**, <including what this round added there>.
 - **Baseline** (ARCHITECTURE's table, v<x.y.z>): <the counts>.
 
 ## Watch for
 
-- **The standing traps:**
-  - **Nothing private in any file or commit message.** Last before each commit: read the diff
-    once more for what no script judges, draft the message into
-    `"$(git rev-parse --git-dir)/COMMIT_DRAFT"`, run `verify` with it (the docs-only command
-    when the commit changes only docs), commit with `git commit -F`, delete the draft.
-  - <the others, carried forward verbatim>.
-- **Comments state the present.** No session ids, no "used to", no review stories.
+- **<A trap the intake should know>.** <Why it bites, and what to do instead.>
 ```
 
 ### `docs/BACKLOG.md`

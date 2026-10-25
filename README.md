@@ -38,23 +38,15 @@ Everything needed to start a new project under this session-based workflow.
    pushed, records the push in the handoff's last commit, pushes, and prints the opener again.
 6. Close the chat. The next session is always a new one.
 
-After you approve a plan, the session checks whether parts of it could run in parallel. If any
-could, it tells you which ones, why, where they meet, and what the split would cost, then asks.
-On a yes, where parts meet it first commits the interfaces between them, and each part runs in
-a chat of its own, cut from there. A part's questions go to the session first: it answers what
-the approved plan already settles, and brings you anything that changes behaviour, scope or
-where the parts meet. The session merges the parts only with your yes, removes their branches
-and checkouts, and you review it all as one session. This is *Parallel parts* in
-`DEVELOPMENT-WORKFLOW.md`, tried once so far.
+After you approve a plan, the session tells you whether parts of it could run in parallel,
+each in a chat of its own, and splits nothing without your yes. It brings you a part's questions
+that change behaviour, scope or where the parts meet, and you review it all as one session.
+This is *Parallel parts* in `DEVELOPMENT-WORKFLOW.md`.
 
 When a round is finished, the printed line says so and the next chat is an intake: paste it,
 then say what you want next.
 
 ## Keeping the kit current
 
-When a project finds a gap in the kit, fix it here first. Then copy `DEVELOPMENT-WORKFLOW.md`
-into the projects that should follow the change, keeping each project's *In this repository*
-paragraph. A change to *Day one* also has to be built in a project already past Session 1: plan
-it as scope at its next intake, or in a session's plan mode. A project whose copy predates
-*Parallel parts* gets them the same way, and names its exclusive resources in `CLAUDE.md`: the
-harnesses, apps, ports and devices only one chat can use at a time.
+When a project finds a gap in the kit, fix it here; the change is for the projects that start
+after it.
