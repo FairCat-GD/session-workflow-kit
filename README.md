@@ -16,7 +16,7 @@ Everything needed to start a new project under this session-based workflow.
 |---|---|
 | `DEVELOPMENT-WORKFLOW.md` | The method and its templates. Copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`. |
 | `KICKOFF.md` | The instructions for Session 0, the intake that sets a project up, with the `SPEC.md` and `CLAUDE.md` templates. Used once per project. |
-| `README.md` | This note, for you. |
+| `README.md` | The note you are currently reading. |
 
 ## Starting a project
 
