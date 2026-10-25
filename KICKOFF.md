@@ -238,7 +238,7 @@ has the ones below.>
    repository.
 7. **Nothing private enters the repository.** <What the user publishes on purpose: the copyright
    holder, the bundle id.> Commits use <the git identity>. The hygiene stage of `verify`
-   enforces the rest.
+   checks what §6 lists, and the last read of each diff covers the rest.
 8. **Licence:** <…>.
 9. **The remote:** <none yet, or where>. It decides pushes, tags and the changelog's links.
 10. **Machine identifiers, never renamed:** <package name, storage keys, bundle id, data

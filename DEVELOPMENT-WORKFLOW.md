@@ -256,8 +256,10 @@ the repository.
     same chat (in Claude Code, `/code-review high`); after parallel parts it covers the
     contract, the parts' commits and the merges too, because integration bugs show only in the
     combined code. Fix what it finds. A finding that changes behaviour or scope is the human's
-    call, and a finding left unfixed is recorded as skipped, with its reason. Falsify the
-    checks the fixes add. Then:
+    call, and a finding left unfixed is recorded as skipped, with its reason. A review round
+    ends when nothing it found would make the product or a session act wrongly: a finding of
+    wording or polish may be skipped, with its reason, and the review is not rerun until it
+    finds nothing. Falsify the checks the fixes add. Then:
     - add a **Review** section to the done-note: the findings, what was fixed and what was
       skipped, what was falsified, and the numbers after the review;
     - update that version's CHANGELOG entry and the docs the fixes touched (no new version);
@@ -275,7 +277,8 @@ the repository.
     `Read docs/next-session-prompt.md: no round is in progress, so the next session is an intake.`
     If the human then approves a push, follow *Git*: the handoff's push note is folded into the
     last commit before it goes, so the push adds no commit. Print the opener again after the
-    push. A milestone's tag comes after all of that (*Git*). The chat ends there.
+    push. A milestone's tag comes after all of that (*Git*), and the opener is printed once
+    more after it. The chat ends there.
 
 The session is the human's review unit. Between sessions they read the diff and try the build,
 and work that runs past the boundary arrives unreviewed and too large to judge.
@@ -417,8 +420,8 @@ conflict at every merge, so only the coordinator writes them, at integration.
    order, one `--no-ff` merge per part, so history keeps each part visible. A merge is a
    commit like any other: `git merge --no-ff --no-commit <branch>`, a typed message drafted
    (`merge: part 8.1 — <what it adds>`), `verify` run with it, then `git commit -F`. A conflict,
-   or a red `verify` on the merge, aborts it (`git merge --abort`) and goes to the human; it is
-   never resolved by a guess.
+   or a red `verify` on the merge, aborts it (`git merge --abort`) and goes to the human; the
+   merge is redone only with their resolution, never with a guess.
 4. **Prove the seam, then run the full gates once, on the combined code.** First add the
    end-to-end tests the briefs left to integration. Then run `verify`, every harness the block
    names, and the exclusive harnesses the parts could not run. The baseline counts must equal
@@ -461,7 +464,7 @@ Each commit's subject is in *Git*.
 | **Part** of a session | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
 | **Session** | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
 | **Before the merges**, the coordinator's own step while parts run | the code and tests of a step no part touches | its own stubs, filled in from the contract | — |
-| **Merge** of a part, or of a contract change | the branch's commits, as one `--no-ff` merge, with the human's resolution of any conflict, and nothing else | — | — |
+| **Merge** of a part, or of a contract change | the branch's commits, as one `--no-ff` merge, with the human's resolution of any conflict or red `verify`, and nothing else | — | — |
 | **Paused at integration** | — | the handoff, naming the open parts and their branches | — |
 | **Review** | the fixes and their tests; the done-note's Review section | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
 | **Architecture review** | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
@@ -537,9 +540,11 @@ Each commit's subject is in *Git*.
   else.
 - **Tags mark milestones only**, such as a first build for testers or 1.0, and the intake names
   them: the session table marks a milestone's version as tagged. The session that cuts it asks
-  before tagging; on a yes it tags locally as the chat's last act before its final opener,
-  after the review, the close and any approved push, so the tag holds the review's fixes and no
-  amend moves the commit from under it. The tag is pushed only with its own approval.
+  before tagging, once the human has said whether to push; on a yes it tags locally as the
+  chat's last act before its final opener, after the review, the close and any approved push,
+  so the tag holds the review's fixes and no amend moves the commit from under it. The tag is
+  pushed only with its own approval (`git push origin <tag>`); unlike a push of commits, that
+  push adds no commit and carries no note.
 
 ## A clean repository
 
