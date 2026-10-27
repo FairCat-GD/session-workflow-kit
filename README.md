@@ -12,16 +12,20 @@ Everything needed to start a new project under this session-based workflow.
 
 <br clear="right">
 
+https://github.com/user-attachments/assets/cdff5ef4-48a0-4956-a090-c02d07113df2
+
 | File | What it is |
 |---|---|
 | `DEVELOPMENT-WORKFLOW.md` | The method and its templates. Copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`. |
 | `KICKOFF.md` | The instructions for Session 0, the intake that sets a project up, with the `SPEC.md` and `CLAUDE.md` templates. Used once per project. |
+| `PDD-TEMPLATE.md` | Optional. A template for the product design draft, to capture your idea as a structured document. Fill what your product needs and delete the rest. |
 | `README.md` | The note you are currently reading. |
 
 ## Starting a project
 
 1. Make an empty folder for it, and write the product design draft (the PDD): what it is, for
    whom, what v1 should do. It can be rough; Session 0 asks about everything it leaves open.
+   `PDD-TEMPLATE.md` gives it a structure if you want one.
 2. Open a Claude Code chat in that folder, in plan mode. Attach `KICKOFF.md`,
    `DEVELOPMENT-WORKFLOW.md` and the PDD, and say: "Read KICKOFF.md and do it."
 3. Answer the intake's questions. Each comes with a recommended answer; accept it, change it,
@@ -33,6 +37,10 @@ Everything needed to start a new project under this session-based workflow.
    backlog and the handoff for Session 1, and commits them locally.
 5. Run `/code-review high`. The session fixes what the review finds, commits the fixes, and
    prints a one-line opener for Session 1.
+
+On a very complex project, have the plan reviewed by an adversary before you see it. Add one
+line to the prompt in step 2: "Before you show me the plan, have [a model of your choice] review
+it adversarially, and tell me what it found and what you changed."
 
 ## Every chat after that
 
