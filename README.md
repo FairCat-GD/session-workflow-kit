@@ -2,13 +2,16 @@
 
 <img src="assets/kit.png" alt="Kit, the fox mascot" width="180" align="right">
 
-Build real software with AI coding agents and keep it on track for weeks, across dozens of
-chats. The kit keeps the plan, the rules and the current state in the repository, so every new
-chat picks up exactly where the last one stopped. Each session plans with you before it writes
-a line, proves its work with tests and checks, and leaves a clear note for the next one. You
-stay in charge: you approve every plan, review every session and decide every push.
+Build real software with AI coding agents and keep it on track across dozens of chats. The kit
+keeps the plan, the rules and the current state in the repository, so every new chat picks up
+exactly where the last one stopped. Each session plans with you before it writes a line, proves
+its work with tests and checks, and leaves a clear note for the next one. You approve every
+plan, review every session and decide every push.
 
-Everything needed to start a new project under this session-based workflow.
+The method builds on spec-driven development: a versioned spec in the repository is the source
+of truth, and the agent writes code against it. The kit adds what holds that together over many
+chats: fixed-scope sessions with a handoff between them, gates whose checks are falsified before
+they are trusted, and a review of every session.
 
 <br clear="right">
 
@@ -19,7 +22,8 @@ https://github.com/user-attachments/assets/cdff5ef4-48a0-4956-a090-c02d07113df2
 | `DEVELOPMENT-WORKFLOW.md` | The method and its templates. Copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`. |
 | `KICKOFF.md` | The instructions for Session 0, the intake that sets a project up, with the `SPEC.md` and `CLAUDE.md` templates. Used once per project. |
 | `PDD-TEMPLATE.md` | Optional. A template for the product design draft, to capture your idea as a structured document. Fill what your product needs and delete the rest. |
-| `README.md` | The note you are currently reading. |
+| `GRAPH-ENGINEERING.md` | Optional reading. How the kit maps onto graph and loop engineering, for readers who know the terms. |
+| `README.md` | This file. |
 
 ## Starting a project
 
