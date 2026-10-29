@@ -68,12 +68,8 @@ for every file that has one.
      what lets each session read only its own parts of the draft.
 3. **`docs/ARCHITECTURE.md`**, how the system is built, from the outline in the workflow's
    templates. It outlasts the round, so every intake answer about how the system is built goes
-   here and not into the spec: the external systems it depends on, the stack and its pins, the
-   layers, layout and boundaries, the data layer and the machine identifiers, the invariants
-   with how each is enforced, the testing strategy, packaging and distribution, and the
-   deliberate decisions, each with its why. Every subsystem the plan builds gets its section
-   now, marked *Not built yet* with the session that builds it. The baseline table starts
-   empty; Session 1 fills it in.
+   into its Decided parts and not into the spec. Its Built parts say "Not yet" and name the
+   session that builds each; the baseline is left for Session 1.
 4. **`docs/spec/SESSIONS.md`**, the plan for round 1, from the template: the header, the table
    of sessions with their versions, and one block per session with **Read**, **Scope**,
    **Docs**, **Gates** and **Watch for**.
@@ -81,14 +77,16 @@ for every file that has one.
    - **Session 1 is always the scaffold** (`0.1.0`): everything in the workflow's *Day one*,
      with *The hygiene stage's design*, below, copied into its block. Its Read line also names
      the workflow's *Day one* and *A clean repository*, which the design relies on.
+   - **Plan the walking skeleton early, and fill in every block's Confirms line** (the
+     workflow's *Rounds*): each Decided part of `ARCHITECTURE.md` is listed in the block that
+     first builds on it.
    - **Where the workflow's *Rounds* places architecture reviews,** name the milestones, and
      what each review measures against the sessions after it.
    - **The last session of the round is the documentation pass,** and where each session is a
      release, it releases the round's last version. Its Read line is everything, like an
      architecture review's:
-     - `docs/ARCHITECTURE.md` read cold against the code: every section true, nothing the
-       round built still marked *Not built yet*, what it did not build pointing at its backlog
-       item, the round's amendments folded into the *Decision log*, and the baseline current;
+     - `docs/ARCHITECTURE.md` read cold against the code: every Built part true, what the
+       round did not build pointing at its backlog item, and the baseline current;
      - `docs/USER-GUIDE.md`;
      - the README;
      - `CLAUDE.md` pointed at the user guide too;
@@ -283,10 +281,10 @@ Among them, every project has the ones below.>
    session and amendment is logged with its reason.
 2. <The product's own acceptance: what is built, and what passes>.
 3. `verify` is green and every harness passes, with the counts in `ARCHITECTURE.md`'s baseline.
-4. Every invariant's enforcement exists and is described in `ARCHITECTURE.md`.
-5. `docs/ARCHITECTURE.md` describes the system as built, with nothing round 1 built still marked
-   *Not built yet*; `docs/USER-GUIDE.md` and a truthful README exist; `CLAUDE.md` points at
-   them.
+4. Every invariant's and every boundary's enforcement exists and is described in
+   `ARCHITECTURE.md`.
+5. `docs/ARCHITECTURE.md`'s Built parts describe the system as built; `docs/USER-GUIDE.md` and
+   a truthful README exist; `CLAUDE.md` points at them.
 6. Everything still open is in `docs/BACKLOG.md`, and `docs: close round 1` has emptied
    `docs/spec/`.
 ````
@@ -305,9 +303,9 @@ id), because data lives under them.>
 **Read `docs/ARCHITECTURE.md`'s overview, invariants and baseline, and the sections your
 session's block names, before changing code.** It describes how the system is built: the stack
 and its pins, the layers and their boundaries, the data layer, the invariants, the testing
-strategy, and the deliberate decisions that look wrong until you know why. A section marked
-*Not built yet* is decided, and the session it names builds it. What it decides changes only
-with the owner, as *The documents* in `docs/DEVELOPMENT-WORKFLOW.md` says. **The round's spec
+strategy, and the deliberate decisions that look wrong until you know why. It keeps what is
+**Decided**, which changes only with the owner, apart from what is **Built**, which every
+session keeps true (*The documents* in `docs/DEVELOPMENT-WORKFLOW.md`). **The round's spec
 files in `docs/spec/` are the contract for what the round delivers**: read the parts your block
 names. `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow this repo follows.
 `docs/BACKLOG.md` lists what has been named but not planned.
