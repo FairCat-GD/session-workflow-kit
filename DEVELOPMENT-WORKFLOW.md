@@ -24,7 +24,7 @@ project's own standing rules live in its `CLAUDE.md`, not here.
 | `CHANGELOG.md` | what shipped, per version, written for the person using the product | append-only for content |
 | `docs/BACKLOG.md` | work that has been named but belongs to no round, and checks nobody has done by hand | items move out when a round picks them up |
 | `CLAUDE.md` | standing rules, loaded into every session automatically | edited as rules change; kept lean |
-| `docs/ARCHITECTURE.md` | the system **as built**: its invariants, its deliberate decisions, its known debt and the baseline counts | written by round 1's documentation pass; kept true by every session after |
+| `docs/ARCHITECTURE.md` | **how the system is built**, as decided and as built: the external systems it depends on, the stack and its pins, the layers and their boundaries, the data layer, the invariants, the testing strategy, the deliberate decisions, the known debt and the baseline counts | written by Session 0; kept true by every session; what it decides changes only with the human, as dated amendments, except a decision marked *(a session's choice)* |
 | `docs/USER-GUIDE.md` | behaviour from the user's side | written by round 1's documentation pass; kept true by every session after |
 | `README.md` | what the thing is, how to run it, where the docs are | written by Session 1; kept true |
 | `docs/DEVELOPMENT-WORKFLOW.md` | this file: the method and its templates | copied verbatim at Session 0; only its *In this repository* paragraph is the project's |
@@ -37,10 +37,11 @@ session's prompt.
 **The spec files of a round.**
 - **Round 1, the build:** `docs/spec/PDD.md` (the product design draft, frozen as received,
   with private details replaced by roles) and `docs/spec/SPEC.md` (the contract derived from
-  it). They are not two copies of one thing. The spec holds the decisions, the architecture,
-  the invariants, where it overrides the draft and which session builds each requirement; for
-  the detail it points into the draft rather than copying it, so the draft stays until the
-  round closes.
+  it). They are not two copies of one thing. The spec holds what the round delivers: its
+  decisions, where it overrides the draft and which session builds each requirement; for the
+  detail it points into the draft rather than copying it, so the draft stays until the round
+  closes. How the system is built is not in the spec: Session 0 writes it into
+  `docs/ARCHITECTURE.md`, which outlasts the round.
 - **Every later round:** one `docs/spec/FEATURE-<name>.md` per request, holding the request
   verbatim and a dated list of the decisions resolved at intake.
 - **A round that comes from an audit** keeps the audit beside them as
@@ -53,6 +54,26 @@ session's prompt.
   changes, as a dated **Amended <date> by the user** note saying what changed and why. The
   original text stays. A session never amends the spec on its own authority.
 
+**What `ARCHITECTURE.md` decides is held the same way.** It decides what an intake answered, in
+whichever section it landed: the external systems and what crosses each boundary, the stack
+and its pins, the layout and boundaries, the contract between the layers, the invariants, the
+data layer's rules (how the data evolves, and the machine identifiers), the testing strategy's
+gates and packaging; and the deliberate decisions the human made, at an intake or in a
+session's plan mode. These change only when the human changes them, as a dated **Amended
+<date> by the user** note beside the original. The note stays there while its round runs, so
+the round's sessions see what changed; the round's last session folds it into the text and
+moves it to the file's *Decision log*, one line each: the date, the section, what changed and
+why. Git history keeps the earlier wording. A session that finds a decided part wrong stops
+(*The rules*, 2).
+
+Everything else is description, and every session keeps it true: what it built within what is
+decided, such as a new entity, field or migration within the data layer's rules, a new message
+within the contract between the layers, or a new test or harness check (dropping a stage or a
+harness is a change to a gate), the debt and the baseline. A decision
+a session made on its own, inside its scope, is written with its why and marked *(a session's
+choice)*; a later session may revise it inside its own scope, keeping the mark and giving the
+reason in its done-note.
+
 ## Rounds
 
 Work happens in **rounds**, and every round has the same lifecycle.
@@ -60,7 +81,9 @@ Work happens in **rounds**, and every round has the same lifecycle.
 **Where a round comes from:**
 - a request from the human;
 - a walkthrough, where the human uses the build and their corrections are the request;
-- an audit run at the human's request and recorded as `REVIEW-<date>.md`;
+- an audit run at the human's request and recorded as `REVIEW-<date>.md`, from the
+  architecture review's template: its §1–§4, with §5 on what the request will put through the
+  code and §6 saying which findings the intake turned into decisions;
 - items picked from `docs/BACKLOG.md`.
 
 However it starts, it goes through an intake.
@@ -76,6 +99,10 @@ However it starts, it goes through an intake.
    - The answers are recorded as numbered, dated *resolved decisions*. An implementing session
      never re-litigates them. What the human declines goes to `docs/BACKLOG.md`, saying which
      intake left it out.
+   - An answer about how the system is built goes into `docs/ARCHITECTURE.md`, not the spec
+     file: Session 0 writes the file, and a later intake adds to it, amends what the human
+     changed beside the original, and gives each new subsystem its section, marked *Not built
+     yet* with the session that builds it.
    - A question that only the implementing session will have the context to answer can be
      left to it, written into its block as **Ask at the start of <id>**. A proposal the human
      has not confirmed says so.
@@ -97,10 +124,14 @@ However it starts, it goes through an intake.
    - **A round of more than five build sessions places an architecture review after each
      milestone**, a point where a layer that later sessions build on is finished. A session's
      review sees one diff; an architecture review reads the code of every session so far, cold,
-     against the spec, and finds the drift between sessions that no diff shows. It is a session
+     against `ARCHITECTURE.md` and the spec, and finds the drift between sessions that no diff
+     shows, and where `ARCHITECTURE.md` no longer describes the code. It is a session
      with its own block, whose Read line is everything, and it writes
      `docs/spec/REVIEW-<date>.md` (template at the end): findings only, no product code, no
-     version. In its plan mode the human picks which findings become scope. Each becomes an
+     version. It does correct a description in `ARCHITECTURE.md` that fell behind code doing
+     what was decided, in its own commit, so no later session builds on it. Where the code
+     broke what the text promised, that is a finding, and what the file decides waits for the
+     human. In its plan mode the human picks which findings become scope. Each becomes an
      amendment to a later block or part of an inserted fix session.
    - **Session ids.** Round 1 numbers its sessions (0, 1, 2…). Later rounds give each session a
      letter for its theme and a number, for example C1–C4 for a cleanup, D1 for the data
@@ -109,8 +140,8 @@ However it starts, it goes through an intake.
    handoff is rewritten to open the round's first session. Then comes a local commit
    (`docs: open round <N> — <theme>`) and the human's review. At an intake the review checks
    the plan against the code: the pointers and the Read lines, the feasibility, and where the
-   spec and the code disagree. Its fixes land in the spec and the plan before the first
-   session opens.
+   spec, `ARCHITECTURE.md` and the code disagree. Its fixes land in the spec, the architecture
+   and the plan before the first session opens.
 4. **Sessions**, one per chat (the cycle below). The plan can change on the way, always with a
    logged reason:
    - **A session can be inserted, with the human,** when a review or a session shows the plan
@@ -121,7 +152,11 @@ However it starts, it goes through an intake.
      the user".
 5. **Close.** The round's last block closes it.
    - **Anything left open** moves to `docs/BACKLOG.md`: deferred work, and checks nobody has
-     done by hand.
+     done by hand. A section of `ARCHITECTURE.md` the round planned and did not build then
+     names its backlog item instead of a session.
+   - **The round's amendments to `ARCHITECTURE.md` are folded in** by its last session: each
+     note's change is written into the text it amends, and the note becomes a line of the
+     *Decision log* (*The documents*).
    - **The round's last session is its release.** Where each session is a release, it cuts a
      version even when its own work is documentation, so every round ends on a version a person
      can name and a milestone's tag can mark. A project that releases at milestones cuts one
@@ -132,18 +167,18 @@ However it starts, it goes through an intake.
      them. Then a separate `docs: close round <N>` commit deletes `docs/spec/`'s files and fills
      in the handoff's sha of the review commit, where the last done-note can still be read in
      full. Git history keeps the specs.
-   - **Round 1 also owes a documentation pass**, planned as a real session, usually its last:
-     - `docs/ARCHITECTURE.md` (the system as built, the invariants, the deliberate
-       decisions, the known debt, a baseline table of counts);
+   - **Round 1 also owes a documentation pass**, planned as a real session, its last:
+     - `docs/ARCHITECTURE.md`, read cold against the code: every section true, nothing the
+       round built still marked *Not built yet*, and the baseline current;
      - `docs/USER-GUIDE.md`;
      - a truthful README.
 
-     From then on `CLAUDE.md` points at the as-built documents, and every session keeps them
-     true.
+     From then on `CLAUDE.md` points at the user guide too, and every session keeps it true.
 
 **Round 1 starts with Session 0 (intake) and Session 1 (scaffold).** Session 0 turns the
-product draft into the spec, the plan and the rules file, and writes no product code. Session 1
-builds the skeleton and the day-one checklist, and is the first block of every build plan.
+product draft into the spec, the architecture, the plan and the rules file, and writes no
+product code. Session 1 builds the skeleton and the day-one checklist, and is the first block
+of every build plan.
 
 ## Day one (Session 1)
 
@@ -171,6 +206,8 @@ Each of these is cheap on day one and expensive to retrofit.
 - **A truthful README**: what the thing is, how to run it, and where the docs are.
 - **The Commands table in `CLAUDE.md`**, filled in: every script a session runs, one line
   each on what it does, the docs-only command included.
+- **The baseline**, in `ARCHITECTURE.md`'s table: the first counts, from the first green
+  `verify`. The sections the scaffold built lose their *Not built yet* line.
 
 ## The session cycle
 
@@ -191,17 +228,18 @@ the repository.
    - what the block's **Read** line names, in full;
    - `CLAUDE.md`, which carries every invariant;
    - this file's *The session cycle*, and a section it points to when a step needs it;
-   - `docs/ARCHITECTURE.md` (once it exists): its overview, invariants and baseline, plus the
-     sections the Read line names;
+   - `docs/ARCHITECTURE.md`: its overview, invariants and baseline, plus the sections the Read
+     line names;
    - from `SESSIONS.md`, its header, this session's block and the previous block's done-note;
    - then the prompt.
 
-   No session reads the spec files or `ARCHITECTURE.md` whole, except an architecture review,
-   whose Read line is everything. They grow past what one reading holds, and most of each is
-   about ground the session does not touch. The invariants are always in view through
-   `CLAUDE.md`, and a long round's milestone reviews read everything (see *Rounds*). The Read
-   line is a floor, not a ceiling: where the code leads somewhere it does not name, read that
-   too. An intake has no block yet: it reads what the between-rounds prompt names.
+   No session reads the spec files or `ARCHITECTURE.md` whole, except an architecture review and
+   round 1's documentation pass, whose Read lines are everything. They grow past what one
+   reading holds, and most of each is about ground the session does not touch. The invariants
+   are always in view through `CLAUDE.md`, and a long round's milestone reviews read everything
+   (see *Rounds*). The Read line is a floor, not a ceiling: where the code leads somewhere it
+   does not name, read that too. An intake has no block yet: it reads what the between-rounds
+   prompt names.
 3. **Plan with the human before any edit.** In plan mode, read the code the block points at
    and propose a concrete plan. Ask the block's *Ask at the start* questions here, and agree
    here on anything the plan changes about the block. Those changes are logged as amendments
@@ -214,11 +252,11 @@ the repository.
    cost: how many parts, and how many chats they may be asked to answer in. If no step passes,
    say so in one line and go on. Parts start only on the human's clear yes; without one, the
    session runs sequentially.
-5. **Work inside the scope.** Stop the moment the spec turns out wrong, a decision is genuinely
-   underdetermined, or something does not behave as specified. Say so, leave the tree clean
-   or clearly marked, and resolve it with the human. A session that guesses to avoid stopping
-   is the expensive failure mode, because the guess becomes load-bearing for everything after
-   it.
+5. **Work inside the scope.** Stop the moment the spec or what `ARCHITECTURE.md` decides turns
+   out wrong, a decision is genuinely underdetermined, or something does not behave as
+   specified. Say so, leave the tree clean or clearly marked, and resolve it with the human. A
+   session that guesses to avoid stopping is the expensive failure mode, because the guess
+   becomes load-bearing for everything after it.
 6. **Verification gate.** `verify` is green before the session may commit. Run the harnesses
    the block names (UI, end-to-end, runtime probes), and any other whose ground the change
    covers. Falsify every new check before trusting it. A commit that changes only docs, meaning
@@ -228,8 +266,11 @@ the repository.
 7. **Keep the docs true**, in the same commit as the code:
    - `CHANGELOG.md`: an entry for everything user-visible, under the session's version, and
      the version bumped in the manifest (see *Versions and the changelog*);
-   - `docs/ARCHITECTURE.md`: the sections the change touches, any new deliberate decision or
-     known debt, and the baseline table for every count that moved;
+   - `docs/ARCHITECTURE.md`: the sections the change touches, with the *Not built yet* line
+     gone from what the session built, any decision settled with the human in plan mode
+     written as decided, any decision it made on its own marked *(a session's choice)*, any
+     new known debt, and the baseline table for every count that moved. What it
+     decides changes only with the human (*The documents*);
    - `docs/USER-GUIDE.md`, for any behaviour a user now sees differently;
    - `README.md`, when what the thing is, how it runs, or a number it states changes;
    - `CLAUDE.md`, when a standing rule, a command, a pin or a standing trap changes;
@@ -459,7 +500,7 @@ Each commit's subject is in *Git*.
 
 | Commit | Adds | Updates | Removes |
 |---|---|---|---|
-| **Intake** | the round's spec files and `SESSIONS.md` | `docs/BACKLOG.md` (what the intake declined); the handoff, which now opens the first session | from `docs/BACKLOG.md`, the items the round picked up |
+| **Intake** | the round's spec files and `SESSIONS.md`; in round 1, also `docs/ARCHITECTURE.md`, `CLAUDE.md`, this file and `docs/BACKLOG.md` | `docs/ARCHITECTURE.md`, in a later round whose request changes how the system is built; `docs/BACKLOG.md` (what the intake declined); the handoff, which now opens the first session | from `docs/BACKLOG.md`, the items the round picked up |
 | **Contract** for a session's parts | the interfaces the parts meet at, as code: types, signatures and stubs that fail if called | the shared registries, with the entries the parts would each add, pointing at the stubs | — |
 | **Part** of a session | the code and tests in the files its brief lists; its part note, `docs/spec/parts/<id>.<n>.md` | only the area docs its brief names | code the part retires, inside its own files |
 | **Session** | the code and its tests; the version's CHANGELOG entry; the block's done-note | the manifest's version; `ARCHITECTURE.md` and its baseline; `USER-GUIDE.md`; `README.md`; `CLAUDE.md`; `docs/BACKLOG.md`; the handoff | code the session retires, and every doc line that described it; after parallel parts, `docs/spec/parts/` |
@@ -467,25 +508,29 @@ Each commit's subject is in *Git*.
 | **Merge** of a part, or of a contract change | the branch's commits, as one `--no-ff` merge, with the human's resolution of any conflict or red `verify`, and nothing else | — | — |
 | **Paused at integration** | — | the handoff, naming the open parts and their branches | — |
 | **Review** | the fixes and their tests; the done-note's Review section | that version's CHANGELOG entry; the docs the fixes touched; the handoff; `SESSIONS.md`, if the review opened a session | — |
-| **Architecture review** | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec, where the human amended a decision; the handoff | — |
+| **Architecture review** | `docs/spec/REVIEW-<date>.md`; the block's done-note | `SESSIONS.md` (the blocks amended from it, a session it inserted, the versions that shift); the spec or `ARCHITECTURE.md`, where the human amended a decision; `ARCHITECTURE.md`'s descriptions it found stale; the handoff | — |
 | **Close**, after the round's last review | — | the handoff, with the sha of the review commit | every file in `docs/spec/` |
 
-- **An intake's review** fixes the spec and the plan. It has no CHANGELOG entry and no version.
-  Neither has an architecture review, whose `/code-review` follows like any session's.
-- **Before round 1's documentation pass**, `ARCHITECTURE.md` and `USER-GUIDE.md` do not exist
-  yet. Sessions keep the README and `CLAUDE.md` true, and their done-notes carry what the pass
-  will need: the deliberate decisions and the counts.
+- **An intake's review** fixes the spec, the architecture and the plan. It has no CHANGELOG
+  entry and no version. Neither has an architecture review, whose `/code-review` follows like
+  any session's.
+- **Before round 1's documentation pass**, `USER-GUIDE.md` does not exist yet. The CHANGELOG
+  and the done-notes carry what it will need.
 - **Never removed or rewritten:** a CHANGELOG entry's content; a done-note, which the review
-  only adds to; a resolved decision, which is amended beside itself rather than edited.
+  only adds to; a resolved decision in a spec file, which is amended beside itself rather than
+  edited; a line of `ARCHITECTURE.md`'s *Decision log*.
 
 ## The rules
 
 1. **One chat per session, never two sessions in one chat.** The split exists so no session
    inherits stale context or a half-formed plan. A session's parallel parts run in chats of
    their own, which the session starts and which end with it.
-2. **The spec is read-only.** A session that finds the spec wrong stops and says so. Agreed
-   divergence is recorded as an amendment in the block, and a decision the human changes is
-   added to the spec as a dated amendment. The spec's original text stays true to its moment.
+2. **The spec, and what `ARCHITECTURE.md` decides, are read-only to a session.** A session that
+   finds either wrong stops and says so. Agreed divergence is recorded as an amendment in the
+   block, and a decision the human changes is added beside the original as a dated amendment,
+   in the spec or in `ARCHITECTURE.md`. The original text stays true to its moment. Only
+   `ARCHITECTURE.md`, which outlasts the round, has its amendments folded in by the round's last
+   session, into its *Decision log*.
 3. **The plan is amendable, but every amendment carries a reason, logged.** An unexplained
    scope change six sessions deep is indistinguishable from a session quietly dropping work
    it could not finish.
@@ -814,7 +859,7 @@ feature file(s), and anything left open moves to `docs/BACKLOG.md`.
 
 | Session | Scope | Decisions | Version |
 |---|---|---|---|
-| <id> | <one line> | <decision numbers> | **<x.y.z>** |
+| <id> | <one line> | <decision numbers; `ARCHITECTURE.md` sections> | **<x.y.z>** |
 | <id> | Architecture review: <milestone> | <decision numbers> | — |
 | <last id> | Docs, changelog, manual runs; close the round | <decision numbers> | **<x.y.z>**<, tagged, when the intake made it a milestone> |
 ```
@@ -829,12 +874,12 @@ feature file(s), and anything left open moves to `docs/BACKLOG.md`.
 <Only for a session inserted mid-round: when and why it was added, in the user's words where
 they gave them.>
 
-**Read:** `<spec file>` <decisions and invariants by number, sections by name>; `PDD.md`
-<parts and items, in round 1>; `ARCHITECTURE.md` <sections>; `REVIEW-<date>.md` <findings,
-where a review amended this block>; `DEVELOPMENT-WORKFLOW.md` <sections beyond the cycle it
-builds from>.
+**Read:** `<spec file>` <decisions by number, sections by name>; `PDD.md` <parts and items, in
+round 1>; `ARCHITECTURE.md` <invariants by number, sections by name>; `REVIEW-<date>.md`
+<findings, where a review amended this block>; `DEVELOPMENT-WORKFLOW.md` <sections beyond the
+cycle it builds from>.
 
-- **<Scope item>** (decision <n>).
+- **<Scope item>** (decision <n>, or the `ARCHITECTURE.md` section that decides it).
   - <What changes, with `file:line` pointers to the code as the intake saw it.>
   - <The constraints: which invariant it touches, which layer the new code belongs in.>
 - **<Scope item>** (decision <n>).
@@ -869,6 +914,8 @@ before the review commit. Leave out a line that has nothing in it.
 - **Amendments:**
   - **<What differs from the block>.** <Why, and who decided: "amended at plan time, with the
     user", "added mid-session by the user", or the session's own finding.>
+- **Revised:** <each *(a session's choice)* in `ARCHITECTURE.md` this session changed: the
+  section, what changed, and why>.
 - **Measured:** <each claim about runtime behaviour, and the version it was measured on>.
 - **Checked by hand:** <each manual run, and the user's look at the build, with the outcome.
   What was left unchecked goes to `docs/BACKLOG.md`.>
@@ -952,11 +999,11 @@ not finished.
 baseline, `docs/BACKLOG.md` or `CLAUDE.md`; cherry-pick; merge, except a contract change the
 coordinator sends you; push; start parts of your own.
 
-**Stop** when the spec turns out wrong, a decision is underdetermined or the interface does not
-hold, and ask the coordinator: <how this part reaches it: through the user, or a message to
-Session <id>'s chat>. The coordinator answers what the approved plan settles; anything that changes
-behaviour, scope, the interface or your file list goes to the user. Wait for the answer, and
-never guess to keep the parallel run going.
+**Stop** when the spec or `ARCHITECTURE.md` turns out wrong, a decision is underdetermined or
+the interface does not hold, and ask the coordinator: <how this part reaches it: through the
+user, or a message to Session <id>'s chat>. The coordinator answers what the approved plan
+settles; anything that changes behaviour, scope, the interface or your file list goes to the
+user. Wait for the answer, and never guess to keep the parallel run going.
 
 **Watch for:**
 - **<A trap of the block's that reaches this part>.** <Why it bites, and what to do instead.>
@@ -999,6 +1046,9 @@ took and what they declined, and anything they said about audience or platform.>
 
 ## Resolved decisions (<YYYY-MM-DD>, at intake)
 
+An answer about how the system is built is not here: it is in `docs/ARCHITECTURE.md`, in the
+section it belongs to.
+
 1. **<The decision, in one sentence>.** <The detail a session needs, and the why where the
    why changes the action.>
 2. **<The sessions, in order>:** <ids and versions>, when the intake decided them.
@@ -1023,9 +1073,9 @@ on the code path. Every claim points at `file:line` on a named commit, or at a m
 # Review <id>: the architecture after the <milestone> milestone
 
 Session <id> of round <N>, <YYYY-MM-DD>. The code and tests of sessions <ids> were read cold
-against `<spec file>` <sections>. This file is evidence, not scope: it changes no product code
-and cuts no version. The user chose, in plan mode, which findings become scope; §6 says where
-each landed.
+against `ARCHITECTURE.md` and `<spec file>` <sections>. This file is evidence, not scope: it
+changes no product code and cuts no version. The user chose, in plan mode, which findings
+become scope; §6 says where each landed.
 
 **Method.** <What was read in full, and against what; the second, independent read, and how its
 findings were verified; what was run and measured, before and after.>
@@ -1072,6 +1122,7 @@ Decided by the user in plan mode, <YYYY-MM-DD>:
 |---|---|
 | F1 | Block <id>: <the amendment> |
 | F<n>, F<n> | Inserted session **<id>a: review fixes — <milestone>**, <x.y.z>; later versions shift |
+| F<n> | `ARCHITECTURE.md` <section>: the stale description corrected in this session |
 | F<n> | Recorded here; nothing to do |
 
 ## 7. Measured
@@ -1083,9 +1134,9 @@ Decided by the user in plan mode, <YYYY-MM-DD>:
 
 ```markdown
 Read <the block's Read line, copied>, CLAUDE.md, *The session cycle* in
-docs/DEVELOPMENT-WORKFLOW.md, docs/ARCHITECTURE.md's overview, invariants and baseline (once it
-exists), docs/spec/SESSIONS.md's header, your block and the previous block's done-note, then
-this file, and do Session <id>: <one line>. <id> covers:
+docs/DEVELOPMENT-WORKFLOW.md, docs/ARCHITECTURE.md's overview, invariants and baseline,
+docs/spec/SESSIONS.md's header, your block and the previous block's done-note, then this file,
+and do Session <id>: <one line>. <id> covers:
 - <part>;
 - <part>.
 
@@ -1117,8 +1168,8 @@ Release <x.y.z>.
 ```markdown
 No round is in progress. Read CLAUDE.md, *The session cycle* in docs/DEVELOPMENT-WORKFLOW.md,
 docs/ARCHITECTURE.md's overview, invariants and baseline, then this file; then the sections of
-docs/ARCHITECTURE.md the request touches. The
-next session is an **intake**: write the user's request down verbatim, ask what it leaves open,
+docs/ARCHITECTURE.md the request touches, and any a block will point at. The next session is
+an **intake**: write the user's request down verbatim, ask what it leaves open,
 and plan the round in `docs/spec/`, a Read line in every block (see
 `docs/DEVELOPMENT-WORKFLOW.md`, *Rounds*).
 
@@ -1141,10 +1192,10 @@ and plan the round in `docs/spec/`, a Read line in every block (see
 ```markdown
 # Backlog
 
-Work that has been named but belongs to no session. Each item needs its own intake before it runs
-(a `docs/spec/FEATURE-*.md` with the request verbatim and the decisions resolved, then a block
-in `docs/spec/SESSIONS.md`; see `docs/DEVELOPMENT-WORKFLOW.md`). When an item is picked up, it
-moves out of this file.
+Work that has been named but belongs to no session. Each item goes through an intake before it
+runs (a `docs/spec/FEATURE-*.md` with the request verbatim and the decisions resolved, then a
+block in `docs/spec/SESSIONS.md`; see `docs/DEVELOPMENT-WORKFLOW.md`). When an item is picked
+up, it moves out of this file.
 
 ## Deferred
 
@@ -1200,39 +1251,128 @@ All notable changes to <Product> are documented here. The format follows
 
 ### `docs/ARCHITECTURE.md`: the outline
 
-```markdown
-# <Product> — architecture, as built
+Session 0 writes it from the intake, and every session after keeps it true (*The documents*).
+Keep every section, writing "None" where one has nothing: the Read lines point at its sections
+by name. It outlasts every round, so it states what it needs and never points into a spec file
+or the draft, which the round's close deletes.
 
-<One paragraph: this is the system as it stands, kept true by every session.>
+````markdown
+# <Product> — architecture
+
+How the system is built: what is decided, and what has been built of it. Session 0 wrote it on
+<YYYY-MM-DD> from the intake, and every session keeps it true. A section marked *Not built yet*
+is decided, and the session it names builds it. What this file decides, as *The documents* in
+`docs/DEVELOPMENT-WORKFLOW.md` lists it, changes only with the user, as a dated **Amended
+<YYYY-MM-DD> by the user** note beside the original until the round closes, then in the
+*Decision log*. A decision marked *(a session's choice)* was made by a session inside its scope,
+and a later session may revise it.
 
 ## Overview
 
+```
+<The layers, and what crosses between them>
+```
+
+<One paragraph: what each layer is for.>
+
+## Context
+
+<Each external system the product talks to or runs inside (an app it drives, a service it
+calls, an OS facility it relies on), or "None": what crosses the boundary each way and in what
+form, which side owns it, the versions supported (pinned under *Stack and pins*), how it fails
+and what the product does then, and what the product must never assume about it.>
+
+## Stack and pins
+
+<Each language, framework and runtime with its pin and why it is pinned, dated <YYYY-MM-DD>;
+where the test runner's runtime differs from the shipped one, and which check runs in the
+shipped one. Measured on this machine: <the runtime versions that were measured, not
+assumed>.>
+
+## Layout and boundaries
+
+**Layout** (Session 1 creates it; the names are fixed, the files inside are each session's):
+- `<folder>/`: <what lives there>.
+
+**Boundaries.**
+- <What each layer may import, call and own, and what it may not; where a constant two layers
+  share lives, and the test that holds the copies equal.>
+
 ## The invariants
 
-<Numbered, each with how it is enforced: a lint rule, a type, a test.>
+Each is a rule, not a preference. *Enforced by* names what fails when it breaks; until the
+check exists, it names the session that builds it.
+
+1. **<The rule>.** *Why:* <one line>. *Enforced by* <the lint rule, type, test or harness
+   check>.
+<n>. **Nothing private enters the repository.** *Why:* any repository may be published, and
+   history cannot be cleaned without a rewrite. *Enforced by* the hygiene stage (Session 1
+   builds it; until then, Session 0's check of the term list): the owner's term list against
+   every file, path and commit message, attribution against every commit message, and secrets
+   by their exact shapes.
 
 ## <The contract between the layers>
 
+<The protocol, threading and runtime facts, stated here in full.>
+
 ## <The data layer: storage, migrations, backups, durability>
+
+**Entities:** <each with its fields, and where it lives>.
+
+**Storage:** <the files or tables, each with its lifetime: permanent, rotated, swept at start,
+removed on close>.
+
+**Evolution:** <migrations or versioned formats, forward-only unless decided otherwise, and how
+a newer version is refused>.
+
+**Machine identifiers, never renamed:** <package name, storage keys, bundle id, data directory,
+environment variables>, because data lives under them.
 
 ## <One section per subsystem>
 
+*Not built yet: Session <id>.* <Or, once the round that planned it closes without building it,
+*Not built yet: backlog, <item>.*>
+
 <Each section stands on its own, because a session reads only the sections its block names:
 what the subsystem does, its contracts, and the deliberate decisions that belong to it, each
-with its why.>
+with its why, and a session's own marked *(a session's choice)*. The session that builds it
+removes the *Not built yet* line.>
 
 ## Testing strategy — <n> layers, and what each cannot see
 
+**`verify` = `<command>`**: named stages, each failing on its own and runnable alone by name,
+then a summary. <The stages>, then hygiene. Green before every commit, or
+`<the docs-only command>` for a commit that changes only docs. The harnesses are
+`<commands>`.
+
+| Layer | Runs | Covers | Cannot see |
+|---|---|---|---|
+| Unit | `verify` | <…> | <…> |
+| Hygiene | `verify`, with the drafted commit message; in full when the term list or the stage changes | Private terms in files, paths and messages; attribution in messages; secrets by their exact shapes; conflict markers | Images and binaries; a term joined inside one lowercase run; attribution in files; a home-directory path; a secret of any other shape |
+| <Harness> | <the sessions that run it> | <…> | <…> |
+| Architecture reviews | <The milestones a long round places them at, or None> | The code against this file and the round's spec | Runtime behaviour |
+| By hand | Recorded in done-notes | <…> | Anything not written down; what nobody checked goes to the backlog |
+
+**Falsification.** Each check a session adds is falsified once: break what it guards, watch it
+fail at its own step, restore it by editing or copying the file back.
+
 ## Packaging
+
+<How it is built, signed, installed and updated, or explicitly not.>
 
 ## Deliberate decisions
 
-<Only the choices that span subsystems and look wrong until you know why, each with its why. A
-decision that belongs to one subsystem lives in that subsystem's section.>
+<Only the choices that span subsystems and look wrong until you know why, each with its why, and
+a session's own marked *(a session's choice)*. A decision that belongs to one subsystem lives in
+that subsystem's section.>
 
 ## Known debt, deliberately deferred
 
 ## Baseline (v<x.y.z>)
+
+<Session 0 writes the heading as `## Baseline` and this line only: "Filled in by Session 1,
+from its first green `verify`." Session 1 adds its version to the heading and replaces the line
+with the table.>
 
 | Check | Expected |
 |---|---|
@@ -1242,4 +1382,10 @@ decision that belongs to one subsystem lives in that subsystem's section.>
 
 A documentation or refactoring change should not move any of these. If one moves, that
 is the finding.
-```
+
+## Decision log
+
+<Empty until a round closes with amendments. One line for each change the user made to what
+this file decides, oldest first, written by the round's last session as it folds the change
+into the text: <YYYY-MM-DD>, <section>: <what changed>, because <why>.>
+````

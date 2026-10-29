@@ -37,8 +37,8 @@ https://github.com/user-attachments/assets/cdff5ef4-48a0-4956-a090-c02d07113df2
    repository, `~/.config/hygiene/terms.txt`, one word per line, shared by all your projects;
    the intake checks it and adds what you name. Each project's `verify` then checks every
    commit against that list, and for AI attribution, secrets and conflict markers.
-4. Approve the plan of documents. Session 0 writes the spec, the session plan, `CLAUDE.md`, the
-   backlog and the handoff for Session 1, and commits them locally.
+4. Approve the plan of documents. Session 0 writes the spec, the architecture, the session plan,
+   `CLAUDE.md`, the backlog and the handoff for Session 1, and commits them locally.
 5. Run `/code-review high`. The session fixes what the review finds, commits the fixes, and
    prints a one-line opener for Session 1.
 

@@ -7,7 +7,7 @@ of round 1**.
 
 Session 0 writes documents and no product code. Its output is:
 - a repository in which Session 1 can start cold;
-- the spec, the session plan and the rules file;
+- the spec, the architecture, the session plan and the rules file;
 - the prompt that opens Session 1.
 
 ## Step 1: intake (a conversation, not a guess)
@@ -18,6 +18,8 @@ list what it leaves underdetermined, including at least:
   explicitly *not* v1.
 - **Platform and stack.** Language, framework, runtime, any version that must be pinned, and
   where the test runner's runtime differs from the shipped one.
+- **External systems.** Every app, service or OS facility it talks to or runs inside: what
+  crosses each boundary, which versions are supported, and how each one fails.
 - **Where data lives.** Storage, the shape of the data model, import and export, backups.
 - **Boundaries and invariants.** What must never happen (data loss, a layer reaching past
   another, secrets in logs…). These become the rules every session is held to.
@@ -56,14 +58,23 @@ for every file that has one.
    says the draft was edited this way.
 2. **`docs/spec/SPEC.md`**, the contract for v1, from the template below. Three of its sections
    carry the whole round:
-   - **Resolved decisions**, dated and numbered, one per intake answer, never re-litigated. The
-     last is **Out of v1**, and each item in it also goes to `docs/BACKLOG.md`.
+   - **Resolved decisions**, dated and numbered, one per intake answer about what v1 delivers,
+     never re-litigated. The last is **Out of v1**, and each item in it also goes to
+     `docs/BACKLOG.md`.
    - **PDD amendments.** The draft stays frozen, so this table is how a session knows which of
      the two wins.
    - **Traceability.** Every requirement in the draft, mapped to the session(s) that build it
      or to the backlog. A requirement with no session is a gap in the plan, and this table is
      what lets each session read only its own parts of the draft.
-3. **`docs/spec/SESSIONS.md`**, the plan for round 1, from the template: the header, the table
+3. **`docs/ARCHITECTURE.md`**, how the system is built, from the outline in the workflow's
+   templates. It outlasts the round, so every intake answer about how the system is built goes
+   here and not into the spec: the external systems it depends on, the stack and its pins, the
+   layers, layout and boundaries, the data layer and the machine identifiers, the invariants
+   with how each is enforced, the testing strategy, packaging and distribution, and the
+   deliberate decisions, each with its why. Every subsystem the plan builds gets its section
+   now, marked *Not built yet* with the session that builds it. The baseline table starts
+   empty; Session 1 fills it in.
+4. **`docs/spec/SESSIONS.md`**, the plan for round 1, from the template: the header, the table
    of sessions with their versions, and one block per session with **Read**, **Scope**,
    **Docs**, **Gates** and **Watch for**.
    - **Session ids are numbers.** This chat is Session 0 and has no block; the plan starts at 1.
@@ -73,26 +84,29 @@ for every file that has one.
    - **Where the workflow's *Rounds* places architecture reviews,** name the milestones, and
      what each review measures against the sessions after it.
    - **The last session of the round is the documentation pass,** and where each session is a
-     release, it releases the round's last version:
-     - `docs/ARCHITECTURE.md` from the template, with its baseline table;
+     release, it releases the round's last version. Its Read line is everything, like an
+     architecture review's:
+     - `docs/ARCHITECTURE.md` read cold against the code: every section true, nothing the
+       round built still marked *Not built yet*, what it did not build pointing at its backlog
+       item, the round's amendments folded into the *Decision log*, and the baseline current;
      - `docs/USER-GUIDE.md`;
      - the README;
-     - `CLAUDE.md` repointed at the as-built documents;
+     - `CLAUDE.md` pointed at the user guide too;
      - anything still open moved to `docs/BACKLOG.md`;
      - then, after its review, the separate `docs: close round 1` commit.
-4. **`CLAUDE.md`**, from the template below, filled in from the spec. Keep it lean: rules that
-   are always true, not history. Seed its *Watch for* section with the standing traps already
-   known: `< /dev/null` for any shell command that reads stdin, and what the intake learned
-   about this machine, such as where the toolchain lives.
-5. **`docs/DEVELOPMENT-WORKFLOW.md`**: a verbatim copy of the file I gave you. If the intake
+5. **`CLAUDE.md`**, from the template below, filled in from the spec and the architecture.
+   Keep it lean: rules that are always true, not history. Seed its *Watch for* section with the
+   standing traps already known: `< /dev/null` for any shell command that reads stdin, and what
+   the intake learned about this machine, such as where the toolchain lives.
+6. **`docs/DEVELOPMENT-WORKFLOW.md`**: a verbatim copy of the file I gave you. If the intake
    decided this project deviates from it (no user guide, releases at milestones…), add the *In
    this repository* paragraph under its introduction and change nothing else.
-6. **`docs/BACKLOG.md`**, from the template: everything in the PDD that is not v1, under
+7. **`docs/BACKLOG.md`**, from the template: everything in the PDD that is not v1, under
    Deferred, Directions and Decided against. Keep the *Not yet checked by hand* heading; it
    starts empty.
-7. **`docs/next-session-prompt.md`**: the prompt for Session 1, from the mid-round template.
+8. **`docs/next-session-prompt.md`**: the prompt for Session 1, from the mid-round template.
    It has no previous session to report, so its state is what Session 0 decided that the spec
-   does not say.
+   and the architecture do not say.
 
 ## Step 3: close Session 0
 
@@ -111,11 +125,12 @@ for every file that has one.
   no stamp yet, so it checks this commit too.
 - Commit locally with explicit paths: `docs: open round 1 — <product>`. Do not add a remote and
   do not push unless I ask.
-- I run `/code-review high` on the commit. It checks the spec and the plan for contradictions,
-  gaps and sessions too big for one chat, every Read line against what its session needs, and
-  the traceability table for a requirement with no session. Fix what it finds; a finding that
+- I run `/code-review high` on the commit. It checks the spec, the architecture and the plan
+  for contradictions, gaps and sessions too big for one chat, every Read line against what its
+  session needs, the traceability table for a requirement with no session, and the
+  architecture for a subsystem no session builds. Fix what it finds; a finding that
   changes a decision is mine to call. Commit the fixes as
-  `review: <the findings, in plain words>`.
+  `review: <the findings, in plain words>, and <n> smaller`.
 - Print the one-line opener as your last message, ready to paste, and stop:
   `Read docs/next-session-prompt.md and do the session it names: Session 1, the scaffold, release 0.1.0.`
   Never print the handoff itself; Session 1 reads it from the repository. Session 1 runs in a
@@ -182,7 +197,7 @@ how it is built.
   markers from pieces at run time, so no file in the repository holds one.
 - **A hit never prints the term or the secret.** It names the file and line, or the commit and
   message line.
-- **What it cannot see** goes into the spec's verification strategy: images and other
+- **What it cannot see** goes into `ARCHITECTURE.md`'s testing strategy: images and other
   binaries, their metadata included; a term joined to another word inside one lowercase run
   (matching every substring instead would flag ordinary words that contain a short term);
   attribution in files, which is checked only in messages, because a document stating this
@@ -212,38 +227,36 @@ lines point at sections and decisions by number.
 
 Read-only from the first line of Session 1. Session 0 derived it on <YYYY-MM-DD> from
 `docs/spec/PDD.md` (<the draft's version>, frozen). The PDD states intent and this file is the
-contract: where they differ, this file wins, and §7 lists every place they do.
+contract for what v1 delivers: where they differ, this file wins, and §3 lists every place they
+do. How the system is built is in `docs/ARCHITECTURE.md`, which Session 0 wrote beside it and
+which outlasts the round.
 
 ## 1. Resolved decisions (<YYYY-MM-DD>, at intake)
 
 Decisions <n–m> were answered by the user at intake. Decisions <n–m> were proposed by the
 intake from the PDD and approved with the Session 0 plan. The last collects what round 1 leaves
 out. None is re-litigated by an implementing session; a change is added beside the decision as
-an **Amended <YYYY-MM-DD> by the user** note.
+an **Amended <YYYY-MM-DD> by the user** note. An answer about how the system is built is not
+here: it is in `ARCHITECTURE.md`, in the section it belongs to.
 
-<One decision per intake answer, in the order the intake reached them. Among them, every project
-has the ones below.>
+<One decision per intake answer about what v1 delivers, in the order the intake reached them.
+Among them, every project has the ones below.>
 
 1. **<The decision, in one sentence>.** <The detail a session needs, and the why where the why
    changes the action. Name the PDD place it settles.>
 2. **<n> sessions** (`SESSIONS.md`): <n> build sessions releasing 0.1.0 to <x.y.z>, and
    architecture reviews after the milestones <names>.
-3. **Stack.** <Each language, framework and runtime with its pin and why it is pinned; where the
-   test runner's runtime differs from the shipped one, and which check runs in the shipped one.>
-4. **Versions.** <Each session a release, or milestones only>; shown in <where>; <the versions
+3. **Versions.** <Each session a release, or milestones only>; shown in <where>; <the versions
    that are milestones and get a tag>.
-5. **Distribution.** <How it is built, installed and updated, or explicitly not.>
-6. **The draft was edited on the way in.** Private details are replaced by roles (<"the owner",
+4. **The draft was edited on the way in.** Private details are replaced by roles (<"the owner",
    …>) and lines crediting or addressing an AI tool are removed. The original is not in the
    repository.
-7. **Nothing private enters the repository.** <What the user publishes on purpose: the copyright
+5. **Nothing private enters the repository.** <What the user publishes on purpose: the copyright
    holder, the bundle id.> Commits use <the git identity>. The hygiene stage of `verify`
-   checks what §6 lists, and the last read of each diff covers the rest.
-8. **Licence:** <…>.
-9. **The remote:** <none yet, or where>. It decides pushes, tags and the changelog's links.
-10. **Machine identifiers, never renamed:** <package name, storage keys, bundle id, data
-    directory, environment variables>.
-11. **Commands:** `verify` is `<command>`; the harnesses are `<commands>`.
+   checks what `ARCHITECTURE.md`'s testing strategy lists, and the last read of each diff
+   covers the rest.
+6. **Licence:** <…>.
+7. **The remote:** <none yet, or where>. It decides pushes, tags and the changelog's links.
 <n>. **Out of v1** (each in `docs/BACKLOG.md`): <…>.
 
 ## 2. What v1 is, and is not
@@ -252,87 +265,28 @@ has the ones below.>
 
 **v1 is not:** <the non-goals, a clause each>.
 
-## 3. Architecture
+## 3. PDD amendments
 
-```
-<The layers, and what crosses between them>
-```
-
-**Layout** (Session 1 creates it; the names are fixed, the files inside are each session's):
-- `<folder>/`: <what lives there>.
-
-**Boundaries.**
-- <What each layer may import, call and own, and what it may not; where a constant two layers
-  share lives, and the test that holds the copies equal.>
-
-**<The protocol, threading and runtime facts>** are as PDD <parts>; this file does not restate
-them.
-
-**Pins** (dated <YYYY-MM-DD>): as decision <n>. Measured on this machine: <the runtime versions
-that were measured, not assumed>.
-
-## 4. Data model
-
-**Entities:** <each with its fields, and where it lives>.
-
-**Storage:** <the files or tables, each with its lifetime: permanent, rotated, swept at start,
-removed on close>.
-
-**Evolution:** <migrations or versioned formats, forward-only unless decided otherwise, and how
-a newer version is refused>.
-
-## 5. Invariants
-
-Each is a rule, not a preference. *Enforced by* names what fails when it breaks.
-
-1. **<The rule>.** *Why:* <one line>. *Enforced by* <the lint rule, type, test or harness
-   check>.
-<n>. **Nothing private enters the repository** (decision <n>). *Why:* any repository may be
-   published, and history cannot be cleaned without a rewrite. *Enforced by* the hygiene stage:
-   the owner's term list against every file, path and commit message, attribution against
-   every commit message, and secrets by their exact shapes.
-
-A decision the user changes later is added under its invariant as an **Amended <YYYY-MM-DD> by
-the user** note; the wording above it stays.
-
-## 6. Verification strategy
-
-**`verify` = `<command>`**: named stages, each failing on its own and runnable alone by name,
-then a summary. <The stages>, then hygiene. Green before every commit, or
-`<the docs-only command>` for a commit that changes only docs.
-
-| Layer | Runs | Covers | Cannot see |
+| PDD place | PDD says | Now | Where decided |
 |---|---|---|---|
-| Unit | `verify` | <…> | <…> |
-| Hygiene | `verify`, with the drafted commit message; in full when the term list or the stage changes | Private terms in files, paths and messages; attribution in messages; secrets by their exact shapes; conflict markers | Images and binaries; a term joined inside one lowercase run; attribution in files; a home-directory path; a secret of any other shape |
-| <Harness> | <the sessions that run it> | <…> | <…> |
-| Architecture reviews | Sessions <ids> | The code against this file | Runtime behaviour |
-| By hand | Recorded in done-notes | <…> | Anything not written down; what nobody checked goes to the backlog |
+| <Part, section> | <…> | <…> | <decision <n>, or the `ARCHITECTURE.md` section> |
 
-**Falsification.** Each check a session adds is falsified once: break what it guards, watch it
-fail at its own step, restore it by editing or copying the file back.
-
-## 7. PDD amendments
-
-| PDD place | PDD says | This spec | Decision |
-|---|---|---|---|
-| <Part, section> | <…> | <…> | <n> |
-
-## 8. Traceability
+## 4. Traceability
 
 | Requirement | Session |
 |---|---|
 | <the draft's requirements, by id or name> | <session id(s), or Backlog> |
 
-## 9. Definition of done for v1
+## 5. Definition of done for v1
 
 1. Every block in `SESSIONS.md` has its done-note with its Review section; every inserted
    session and amendment is logged with its reason.
 2. <The product's own acceptance: what is built, and what passes>.
 3. `verify` is green and every harness passes, with the counts in `ARCHITECTURE.md`'s baseline.
 4. Every invariant's enforcement exists and is described in `ARCHITECTURE.md`.
-5. `docs/ARCHITECTURE.md`, `docs/USER-GUIDE.md` and a truthful README exist; `CLAUDE.md` points
-   at them.
+5. `docs/ARCHITECTURE.md` describes the system as built, with nothing round 1 built still marked
+   *Not built yet*; `docs/USER-GUIDE.md` and a truthful README exist; `CLAUDE.md` points at
+   them.
 6. Everything still open is in `docs/BACKLOG.md`, and `docs: close round 1` has emptied
    `docs/spec/`.
 ````
@@ -348,8 +302,14 @@ Fill every `<…>`, and delete a section only when it truly does not apply.
 must keep their spelling even if the product is renamed (package name, storage keys, bundle
 id), because data lives under them.>
 
-**`docs/spec/SPEC.md` is the contract: read the parts your session's block names before
-changing code.** `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow this repo follows.
+**Read `docs/ARCHITECTURE.md`'s overview, invariants and baseline, and the sections your
+session's block names, before changing code.** It describes how the system is built: the stack
+and its pins, the layers and their boundaries, the data layer, the invariants, the testing
+strategy, and the deliberate decisions that look wrong until you know why. A section marked
+*Not built yet* is decided, and the session it names builds it. What it decides changes only
+with the owner, as *The documents* in `docs/DEVELOPMENT-WORKFLOW.md` says. **The round's spec
+files in `docs/spec/` are the contract for what the round delivers**: read the parts your block
+names. `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow this repo follows.
 `docs/BACKLOG.md` lists what has been named but not planned.
 
 ## Working protocol
@@ -379,8 +339,8 @@ them) and anything still open moves to `docs/BACKLOG.md`. **State lives in
 
 ## Invariants — these are rules, not preferences
 
-<Numbered, copied from SPEC.md's invariants. Say how each is enforced (a lint rule, a type, a
-test) where it is.>
+<Numbered, copied from ARCHITECTURE.md's invariants, and changed with them. Say how each is
+enforced (a lint rule, a type, a test) where it is.>
 
 ## <A pinned dependency or stack trap, as a heading that states the rule>
 
@@ -425,6 +385,7 @@ runs them; the session's integration does.
 
 ## Git
 
+- Commits use <the git identity>.
 - Commit locally; a push or tag needs explicit approval, each time. Before any push, list
   `git log origin/main..HEAD`; parallel sessions may share this checkout.
 - Stage explicit paths, never `git add -A`. Never undo with `git checkout <path>`.
@@ -448,14 +409,9 @@ check, a script or a pin makes it impossible.
   `CHANGELOG.md`.
 ```
 
-**At round 1's close,** the documentation pass replaces the "`docs/spec/SPEC.md` is the
-contract" paragraph with:
+**At round 1's close,** the documentation pass adds a sentence to the paragraph that opens with
+`docs/ARCHITECTURE.md`, before the one about the workflow:
 
 ```markdown
-**Read `docs/ARCHITECTURE.md`'s overview, invariants and baseline, and the sections your
-session's block names, before changing code.** It describes the system as built — the
-invariants, the contracts, the data layer, the testing strategy, and the deliberate decisions
-that look wrong until you know why. `docs/USER-GUIDE.md` describes behaviour from the user's
-side; `docs/DEVELOPMENT-WORKFLOW.md` is the session-based workflow this repo follows.
-`docs/BACKLOG.md` lists what has been named but not planned.
+`docs/USER-GUIDE.md` describes behaviour from the user's side.
 ```

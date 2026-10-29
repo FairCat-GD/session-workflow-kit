@@ -31,8 +31,8 @@ to run independent work in parallel.
   fixes the interfaces where they meet, and integration merges them back and runs the full
   gates over the combined code.
 - **Whole-graph checks are architecture reviews.** A long round places a review after each
-  milestone. It reads the code of every session so far, cold, against the spec, to catch drift
-  between sessions that a single diff hides.
+  milestone. It reads the code of every session so far, cold, against `ARCHITECTURE.md` and the
+  spec, to catch drift between sessions that a single diff hides.
 
 ## Two deliberate choices
 
