@@ -90,7 +90,7 @@ However it starts, it goes through an intake.
 
 1. **Intake.** The intake is a session of its own, in its own chat, and writes no product code.
    - The request is written down verbatim.
-   - A request that asks for judgement ("what is missing before 1.0?") is answered by an audit
+   - A request that asks for judgement ("what is missing before 2.0?") is answered by an audit
      first, of the code, the docs and whatever the product promises. The intake then proposes
      groups of work for the human to pick from.
    - What the request leaves underdetermined is asked in small batches, each question with a
@@ -709,10 +709,13 @@ commit message where there is none (an intake and its review, or the close).
 ## Versions and the changelog
 
 - **Each session is a release.** `SESSIONS.md`'s table gives each session its version:
-  - a minor bump for a session that adds or changes behaviour;
-  - a fix bump for one that only fixes;
-  - no bump for one whose changes no user can see, except the round's last session, which
-    releases the round.
+  - a major bump for round 1's last session, which releases the full working product as
+    `1.0.0`, and after that only when the human decides at an intake that a round is a new
+    major version;
+  - a minor bump for a session that adds a feature or capability, or changes behaviour;
+  - a fix bump for a session that only fixes defects or does maintenance;
+  - no bump for a session that changes no product code, such as an architecture review, except
+    the round's last session, which releases the round.
 
   The version is `major.minor.fix` in the manifest and is shown in the product.
 - **One entry per version**, `## [x.y.z] — YYYY-MM-DD`, using only Keep a Changelog's headings
@@ -720,7 +723,8 @@ commit message where there is none (an intake and its review, or the close).
   the entry's lead paragraph. `[Unreleased]` stays at the top and stays empty, because each
   session writes its own version's entry.
 - **Written for the person using the product.** Each line leads with what they will notice, in
-  bold, then what it means for them. No file names, no session ids.
+  bold, then what it means for them. No file names, no session ids. A maintenance version with
+  nothing to notice says so in one line under Changed.
 - **Review fixes join the session's entry**, under the same version.
 - **Append-only for content.** A shipped entry's substance is never reworded. Normalising a
   heading to the set above is allowed.

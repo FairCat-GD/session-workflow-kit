@@ -82,9 +82,8 @@ for every file that has one.
      first builds on it.
    - **Where the workflow's *Rounds* places architecture reviews,** name the milestones, and
      what each review measures against the sessions after it.
-   - **The last session of the round is the documentation pass,** and where each session is a
-     release, it releases the round's last version. Its Read line is everything, like an
-     architecture review's:
+   - **The last session of the round is the documentation pass,** and it releases `1.0.0`. Its
+     Read line is everything, like an architecture review's:
      - `docs/ARCHITECTURE.md` read cold against the code: every Built part true, what the
        round did not build pointing at its backlog item, and the baseline current;
      - `docs/USER-GUIDE.md`;
@@ -242,7 +241,7 @@ Among them, every project has the ones below.>
 
 1. **<The decision, in one sentence>.** <The detail a session needs, and the why where the why
    changes the action. Name the PDD place it settles.>
-2. **<n> sessions** (`SESSIONS.md`): <n> build sessions releasing 0.1.0 to <x.y.z>, and
+2. **<n> sessions** (`SESSIONS.md`): <n> build sessions releasing 0.1.0 to 1.0.0, and
    architecture reviews after the milestones <names>.
 3. **Versions.** <Each session a release, or milestones only>; shown in <where>; <the versions
    that are milestones and get a tag>.
