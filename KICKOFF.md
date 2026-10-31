@@ -40,6 +40,9 @@ list what it leaves underdetermined, including at least:
   holder, a bundle id). The answer may be nothing. Check `~/.config/hygiene/terms.txt` exists
   (empty is fine); creating it if it does not, and adding any new term I name, go into the
   plan.
+- **A review of the plan.** Whether a separate agent reviews Session 0's plan adversarially
+  before I see it, and on which model (the workflow's *Engineering practices*). Recommend yes,
+  on the strongest model available, and say that it is costly.
 
 Ask me in small batches. For every question, give your recommended answer and one line on why,
 so I can accept it quickly. Where the PDD contradicts itself, ask which part wins. Do not
@@ -48,9 +51,10 @@ move to step 2 until every open item is answered or explicitly deferred.
 ## Step 2: write the round-1 documents
 
 This chat runs in plan mode like every session: once the intake is done, propose the documents
-below, and the term-list changes from step 1, as your plan, and write them when I approve it.
-Use the templates at the end of `DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file,
-for every file that has one.
+below, and the term-list changes from step 1, as your plan, and write them when I approve it. If
+I said yes to a review of the plan, have it done before you show me the plan, and end the plan
+with what the review changed and rejected. Use the templates at the end of
+`DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file, for every file that has one.
 
 1. **`docs/spec/PDD.md`**: the draft as I gave it, frozen, with two edits only: private details
    are replaced by roles ("the owner", "the first game"), and lines crediting or addressing an

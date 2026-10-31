@@ -36,15 +36,13 @@ https://github.com/user-attachments/assets/cdff5ef4-48a0-4956-a090-c02d07113df2
    or defer it. One asks what is private. Your private terms live in one file outside every
    repository, `~/.config/hygiene/terms.txt`, one word per line, shared by all your projects;
    the intake checks it and adds what you name. Each project's `verify` then checks every
-   commit against that list, and for AI attribution, secrets and conflict markers.
+   commit against that list, and for AI attribution, secrets and conflict markers. Another asks
+   whether a separate agent should attack the plan before you see it, on the strongest model you
+   have: recommended for a new project, but costly, so it runs only on your yes.
 4. Approve the plan of documents. Session 0 writes the spec, the architecture, the session plan,
    `CLAUDE.md`, the backlog and the handoff for Session 1, and commits them locally.
 5. Run `/code-review high`. The session fixes what the review finds, commits the fixes, and
    prints a one-line opener for Session 1.
-
-On a very complex project, have the plan reviewed by an adversary before you see it. Add one
-line to the prompt in step 2: "Before you show me the plan, have [a model of your choice] review
-it adversarially, and tell me what it found and what you changed."
 
 ## Every chat after that
 
@@ -59,6 +57,10 @@ it adversarially, and tell me what it found and what you changed."
 5. Try the build if you like. If you want the work on the remote, say so: it lists what would be
    pushed, records the push in the handoff's last commit, pushes, and prints the opener again.
 6. Close the chat. The next session is always a new one.
+
+On one of its riskiest sessions, the session may ask whether a separate agent should attack its
+plan before you see it. It runs that review only on your yes. This is *Adversarial plan review*
+in `DEVELOPMENT-WORKFLOW.md`.
 
 After you approve a plan, the session tells you whether parts of it could run in parallel,
 each in a chat of its own, and splits nothing without your yes. It brings you a part's questions

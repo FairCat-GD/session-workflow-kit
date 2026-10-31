@@ -244,11 +244,13 @@ the repository.
    (see *Rounds*). The Read line is a floor, not a ceiling: where the code leads somewhere it
    does not name, read that too. An intake has no block yet: it reads what the between-rounds
    prompt names.
-3. **Plan with the human before any edit.** In plan mode, read the code the block points at
-   and propose a concrete plan. Ask the block's *Ask at the start* questions here, and agree
-   here on anything the plan changes about the block. Those changes are logged as amendments
-   ("amended at plan time, with the user"). The human approves the plan, and only then does the
-   session edit.
+3. **Plan with the human before any edit.** In plan mode, read the code the block points at, ask
+   the block's *Ask at the start* questions, and write a concrete plan. Before showing it, where
+   it is among the riskiest and the session is unsure of it, say why in a line and offer an
+   adversarial plan review (*Engineering practices*). On a yes, the plan the human sees is the
+   reviewed one. Agree here on anything the plan changes about the block. Those changes are
+   logged as amendments ("amended at plan time, with the user"). The human approves the plan,
+   and only then does the session edit.
 4. **Look for independent parts.** Once the plan is approved, check each of its steps against
    the independence test (see *Parallel parts*) and tell the human, in a few lines, which steps
    could run in parallel and why each is independent, which must stay sequential and what ties
@@ -335,8 +337,8 @@ and work that runs past the boundary arrives unreviewed and too large to judge.
 A session can run independent pieces of its approved plan in parallel, each in a chat of its
 own. It is an option inside the session, never a way around the cycle. The plan agreed before
 any edit, the stop rule, decisions not re-litigated, every check falsified, nothing private,
-one review per session and pushes only with approval all still hold. A session that cannot keep
-all of that runs the pieces one after another.
+one code review per session and pushes only with approval all still hold. A session that cannot
+keep all of that runs the pieces one after another.
 
 - **The coordinator** is the session the human opened. It plans, proposes the split, commits
   the contract, starts the parts, answers what the plan settles and integrates them, and it
@@ -819,6 +821,25 @@ and the next session is an intake.
   single module is that module's comment. Without this the file grows into one list nobody can
   read in a session: one project's reached 3,200 lines, half of them a single list of
   decisions.
+- **Adversarial plan review.** A separate agent attacks a plan before the human sees it. It is
+  costly, so it runs only on the human's yes, and asking says so. Session 0 asks at its intake,
+  recommending yes. Any other session or intake asks only when its plan warrants it (the cycle,
+  step 3): a proposed change to a Decided part, data that cannot be rebuilt or a public
+  interface are the usual reasons, and most sessions have none. One run sets no rule for the
+  next.
+  - **Who:** a read-only subagent in a fresh context, on the strongest model available or one
+    the human names (in Claude Code, a subagent with its model set). The fresh context does the
+    work, so planning on the strongest model already is no reason not to ask.
+  - **What it gets:** the plan file and, by path, what the plan rests on, with `docs/BACKLOG.md`
+    once it exists. It is asked what is wrong, what is missing and what will fail. It is not
+    told what the session is worried about.
+  - **One pass.** It runs once the plan is written, and is not rerun. The session checks every
+    finding against the sources and against what the human said, because some are wrong, and
+    folds in what holds. A finding that changes a decision or the scope is the human's call.
+  - **The plan ends with what it changed and what it rejected, and why.** The plan file is not
+    in the repository, so a rejection that could come up again is written down: what the human
+    settled is recorded as a decision, and a judgement goes to `docs/BACKLOG.md`'s *Decided
+    against*. It does not replace the code review (the cycle, step 11).
 
 ## Adapting the workflow
 
