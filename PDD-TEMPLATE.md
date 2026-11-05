@@ -2,8 +2,6 @@
 
 > **Legend:** `_[bracketed italic text]_` is a prompt to replace; plain italic paragraphs are guidance you can keep or delete. Fill sections to the depth your product needs and delete what doesn't apply. A weekend utility needs Parts 0, 1, 4, 5, 12 and 13; a regulated multi-platform product uses everything.
 >
-> **Part status.** Tag each part's heading `[draft]`, `[in review]` or `[locked]`. A tag says how finished a part is; whether a line in it is decided is what the markers below say.
->
 > **Decisions are marked.** Anything a build would rely on is marked **Decided** (the owner settled it) or **Proposed** (a recommendation waiting for the owner). Unmarked text is intent, not a decision. What nobody has settled yet goes to Appendix C. A build guesses wherever this document is silent, and an unmarked guess becomes load-bearing.
 >
 > **One home per fact.** State each rule once, in the part it belongs to, under an ID (F-, N-, I-, T-). Everywhere else, refer to the ID. A rule copied into three parts drifts into three different rules.
