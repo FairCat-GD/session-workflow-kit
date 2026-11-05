@@ -37,16 +37,21 @@ list what it leaves underdetermined, including at least:
 - **Privacy** (the workflow's *A clean repository*). Ask what is private beyond what is
   already public, and which git identity the commits use. Ask about other people, my
   unannounced projects or games, agent personas, and what I publish on purpose (a copyright
-  holder, a bundle id). The answer may be nothing. Check `~/.config/hygiene/terms.txt` exists
-  (empty is fine); creating it if it does not, and adding any new term I name, go into the
-  plan.
+  holder, a bundle id); the answer may be nothing. Where the PDD lists private names, start
+  from that list: the distinctive words of each name go on the term list, one per line, since
+  the hygiene stage matches single words, and its role is what replaces it in the repository.
+  Check `~/.config/hygiene/terms.txt` exists (empty is fine); creating it if it does not, and
+  adding any new term I name, go into the plan.
 - **A review of the plan.** Whether a separate agent reviews Session 0's plan adversarially
   before I see it, and on which model (the workflow's *Engineering practices*). Recommend yes,
   on the strongest model available, and say that it is costly.
 
 Ask me in small batches. For every question, give your recommended answer and one line on why,
-so I can accept it quickly. Where the PDD contradicts itself, ask which part wins. Do not
-move to step 2 until every open item is answered or explicitly deferred.
+so I can accept it quickly. Where the PDD marks an answer **Decided**, list it for me to confirm
+instead of asking it, and say so if you see a reason it is wrong; where it marks one
+**Proposed**, ask, with its proposal as your recommendation unless you would recommend
+otherwise. Where the PDD contradicts itself, ask which part wins. Do not move to step 2 until
+every open item is answered or explicitly deferred.
 
 ## Step 2: write the round-1 documents
 
@@ -56,10 +61,11 @@ I said yes to a review of the plan, have it done before you show me the plan, an
 with what the review changed and rejected. Use the templates at the end of
 `DEVELOPMENT-WORKFLOW.md`, and the two at the end of this file, for every file that has one.
 
-1. **`docs/spec/PDD.md`**: the draft as I gave it, frozen, with two edits only: private details
-   are replaced by roles ("the owner", "the first game"), and lines crediting or addressing an
-   AI tool are removed. The original stays outside the repository, and a resolved decision
-   says the draft was edited this way.
+1. **`docs/spec/PDD.md`**: the draft as I gave it, frozen, with these edits only: private
+   details are replaced by roles ("the owner", "the first game"), its own list of private names
+   is removed where it has one, and lines crediting or addressing an AI tool are removed. The
+   original stays outside the repository, and a resolved decision says the draft was edited
+   this way.
 2. **`docs/spec/SPEC.md`**, the contract for v1, from the template below. Three of its sections
    carry the whole round:
    - **Resolved decisions**, dated and numbered, one per intake answer about what v1 delivers,
@@ -72,8 +78,9 @@ with what the review changed and rejected. Use the templates at the end of
      what lets each session read only its own parts of the draft.
 3. **`docs/ARCHITECTURE.md`**, how the system is built, from the outline in the workflow's
    templates. It outlasts the round, so every intake answer about how the system is built goes
-   into its Decided parts and not into the spec. Its Built parts say "Not yet" and name the
-   session that builds each; the baseline is left for Session 1.
+   into its Decided parts and not into the spec. Its invariants start from the draft's own list,
+   where it has one. Its Built parts say "Not yet" and name the session that builds each; the
+   baseline is left for Session 1.
 4. **`docs/spec/SESSIONS.md`**, the plan for round 1, from the template: the header, the table
    of sessions with their versions, and one block per session with **Read**, **Scope**,
    **Docs**, **Gates** and **Watch for**.
@@ -234,11 +241,13 @@ which outlasts the round.
 
 ## 1. Resolved decisions (<YYYY-MM-DD>, at intake)
 
-Decisions <n–m> were answered by the user at intake. Decisions <n–m> were proposed by the
-intake from the PDD and approved with the Session 0 plan. The last collects what round 1 leaves
-out. None is re-litigated by an implementing session; a change is added beside the decision as
-an **Amended <YYYY-MM-DD> by the user** note. An answer about how the system is built is not
-here: it is in `ARCHITECTURE.md`, in the section it belongs to.
+Decisions <n–m> were answered by the user at intake.< Decisions <n–m> were marked Decided in
+the PDD and confirmed by the user; each points at its PDD place rather than restating it.>
+Decisions <n–m> were proposed by the intake from the PDD and approved with the Session 0 plan.
+The last collects what round 1 leaves out. None is re-litigated by an implementing session; a
+change is added beside the decision as an **Amended <YYYY-MM-DD> by the user** note. An answer
+about how the system is built is not here: it is in `ARCHITECTURE.md`, in the section it
+belongs to.
 
 <One decision per intake answer about what v1 delivers, in the order the intake reached them.
 Among them, every project has the ones below.>
@@ -250,8 +259,8 @@ Among them, every project has the ones below.>
 3. **Versions.** <Each session a release, or milestones only>; shown in <where>; <the versions
    that are milestones and get a tag>.
 4. **The draft was edited on the way in.** Private details are replaced by roles (<"the owner",
-   …>) and lines crediting or addressing an AI tool are removed. The original is not in the
-   repository.
+   …>)<, the draft's list of private names is removed,> and lines crediting or addressing an
+   AI tool are removed. The original is not in the repository.
 5. **Nothing private enters the repository.** <What the user publishes on purpose: the copyright
    holder, the bundle id.> Commits use <the git identity>. The hygiene stage of `verify`
    checks what `ARCHITECTURE.md`'s testing strategy lists, and the last read of each diff
@@ -270,7 +279,7 @@ Among them, every project has the ones below.>
 
 | PDD place | PDD says | Now | Where decided |
 |---|---|---|---|
-| <Part, section> | <…> | <…> | <decision <n>, or the `ARCHITECTURE.md` section> |
+| <Part, section, or the item's id> | <…> | <…> | <decision <n>, or the `ARCHITECTURE.md` section> |
 
 ## 4. Traceability
 

@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/cdff5ef4-48a0-4956-a090-c02d07113df2
 |---|---|
 | `DEVELOPMENT-WORKFLOW.md` | The method and its templates. Copied verbatim into every project as `docs/DEVELOPMENT-WORKFLOW.md`. |
 | `KICKOFF.md` | The instructions for Session 0, the intake that sets a project up, with the `SPEC.md` and `CLAUDE.md` templates. Used once per project. |
-| `PDD-TEMPLATE.md` | Optional. A template for the product design draft, to capture your idea as a structured document. Fill what your product needs and delete the rest. |
+| `PDD-TEMPLATE.md` | Optional. A template for the product design draft, to capture your idea as a structured document. It marks what you have decided apart from what you only propose, so Session 0 confirms the one and asks about the other. Fill what your product needs and delete the rest. |
 | `GRAPH-ENGINEERING.md` | Optional reading. How the kit maps onto graph and loop engineering, for readers who know the terms. |
 | `README.md` | This file. |
 

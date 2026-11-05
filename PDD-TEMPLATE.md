@@ -1,6 +1,28 @@
 # Product Design Document: [APP NAME]
 
 > **Legend:** `_[bracketed italic text]_` is a prompt to replace; plain italic paragraphs are guidance you can keep or delete. Fill sections to the depth your product needs and delete what doesn't apply. A weekend utility needs Parts 0, 1, 4, 5, 12 and 13; a regulated multi-platform product uses everything.
+>
+> **Part status.** Tag each part's heading `[draft]`, `[in review]` or `[locked]`. A tag says how finished a part is; whether a line in it is decided is what the markers below say.
+>
+> **Decisions are marked.** Anything a build would rely on is marked **Decided** (the owner settled it) or **Proposed** (a recommendation waiting for the owner). Unmarked text is intent, not a decision. What nobody has settled yet goes to Appendix C. A build guesses wherever this document is silent, and an unmarked guess becomes load-bearing.
+>
+> **One home per fact.** State each rule once, in the part it belongs to, under an ID (F-, N-, I-, T-). Everywhere else, refer to the ID. A rule copied into three parts drifts into three different rules.
+>
+> **When the build starts,** this draft is frozen as it stands: private names are replaced by roles, and nothing in it is edited again. Changes after that live in the build's own documents: what the build delivers in its spec, how it is built in its architecture document. So keep build state (what is done, what is in progress) out of this document; it goes stale the day it is written.
+>
+> **Intake map.** The build's first session (Session 0 in the session workflow kit) asks about everything below. Where this draft already answers, mark it Decided and the intake confirms instead of asking.
+>
+> | Intake asks | Answered in |
+> |---|---|
+> | What v1 is, and is not | Part 1 non-goals, Part 13 MVP and scope cuts |
+> | Platform, stack, pins | Part 1 platforms, Part 8 stack |
+> | External systems and how each fails | Part 8 external systems |
+> | Where data lives; names that never change | Part 6 |
+> | Boundaries and invariants | Part 8 stack & architecture (boundaries), Part 5 invariants |
+> | How it is verified | Part 5 check column, Part 12 quality strategy |
+> | Distribution | Part 8 build, release & operations |
+> | Versions and the remote | Part 13 releases |
+> | Privacy | Part 0 private names |
 
 ---
 
@@ -14,6 +36,7 @@
 | **Status** | Discovery / Design / Build / Beta / Live |
 | **Current focus** | _[the part(s) being actively worked on]_ |
 | **Last updated** | _[date]_ |
+| **Private names** | _[people, unannounced projects, clients and anything else that must not reach a repository, each with the role that replaces it: "the owner", "the first game". This field is removed when the draft enters a repository.]_ |
 
 **Changelog**
 
@@ -37,10 +60,10 @@ _[the specific pain, who has it, how they cope today, and what that costs them. 
 
 **Product pillars**
 
-_[3-4 non-negotiable principles every decision is measured against.]_
-- Pillar 1: _[e.g. "Capture in under three seconds"]_
-- Pillar 2:
-- Pillar 3:
+_[3-4 non-negotiable principles every decision is measured against, ranked. When two conflict, the higher one wins; saying so once settles every later argument between them.]_
+1. _[e.g. "Capture in under three seconds"]_
+2.
+3.
 
 **Non-goals (what this product is not)**
 
@@ -60,17 +83,17 @@ _[e.g. personal knowledge tool, habit tracker, developer utility]_
 
 **Platforms**
 
-_[iOS / Android / macOS / Windows / web / CLI, and why. Which comes first.]_
+_[iOS / Android / macOS / Windows / web / CLI / a chat platform / a server, and why. Which comes first.]_
 
 **Usage shape**
 
-_[how often, for how long, and where in the user's day: a 10-second capture twenty times a day is a different product from a 40-minute weekly review.]_
+_[how often, for how long, and where in the user's day: a 10-second capture twenty times a day is a different product from a 40-minute weekly review. Give expected volumes where you know them.]_
 
 ---
 
 ## Part 2: Market & Competitive Positioning
 
-*An honest look at the landscape. This keeps the vision grounded and forces you to articulate the gap you're actually filling.*
+*An honest look at the landscape. This keeps the vision grounded and forces you to articulate the gap you're actually filling. Delete this part for private or internal tools.*
 
 **Market context**
 
@@ -98,9 +121,9 @@ _[the specific unmet need or underserved user this product addresses.]_
 
 *Design backwards from the user's situation. Define what they're trying to get done, then build the product that does it.*
 
-**Personas**
+**Personas or roles**
 
-_[1-3 concrete user types: context, goals, frustrations, skill level, devices. Name them. Rank them; the primary persona wins every conflict.]_
+_[1-3 concrete user types: context, goals, frustrations, skill level, devices. Name them. Rank them; the primary persona wins every conflict. For a private or internal tool, a table of roles (role, who fills it, what they may do) usually serves better.]_
 
 **Jobs to be done**
 
@@ -133,22 +156,35 @@ _[the repeating cycle the product is built on: e.g. capture → organize → ret
 _[the 3-5 flows that deliver the value. For each: trigger, steps, decision points, outcome, and what "done" looks like. Diagram if it helps.]_
 - Flow: _[name]_: _[trigger → steps → outcome]_
 
+**Worked examples**
+
+_[2-4 concrete cases: the exact input, and the exact output or behaviour you expect. At least one is the nastiest edge case you can think of. Invented data only. One example settles more than a paragraph of intent, because it can't be read two ways.]_
+
+| Case | Input | Expected |
+|---|---|---|
+| _[the common case]_ | | |
+| _[the nasty edge case]_ | | |
+
 **Feature set**
 
-_[each core feature: what it is, how it behaves, why it earns its place, and how it interacts with the others.]_
-- Feature: _[name]_: _[behaviour, rules, edge cases]_
+_[each core feature: what it is, how it behaves, why it earns its place, and how it interacts with the others. Rules go in Part 5 under an ID; refer to it here.]_
+- Feature: _[name]_: _[behaviour, edge cases, requirement IDs]_
 
 **Information architecture**
 
-_[the structure of the product: top-level sections, navigation model, how content is organized and found. Where does everything live?]_
+_[the structure of the product: top-level sections, navigation model, how content is organized and found. For a product with no screens (a bot, a CLI, a service), how each kind of input is represented inside it.]_
 
 **States & edge cases**
 
 _[empty states, loading, errors, offline, permissions denied, first use vs. hundredth use, very large data sets. The unhappy paths are most of the product.]_
 
+| State | Behaviour |
+|---|---|
+| _[e.g. network unavailable]_ | _[what the user sees, what the product does]_ |
+
 **Input & interaction model**
 
-_[primary input per platform (touch, keyboard-first, voice, drag), shortcuts, gestures. Include a mapping table for anything non-obvious.]_
+_[primary input per platform (touch, keyboard-first, voice, drag, commands), shortcuts, gestures. Include a mapping table for anything non-obvious.]_
 
 ---
 
@@ -158,23 +194,43 @@ _[primary input per platform (touch, keyboard-first, voice, drag), shortcuts, ge
 
 **Functional requirements**
 
-_[user stories or requirement statements with priority. Keep them at feature level; detailed acceptance criteria live in the linked tracker.]_
+_[user stories or requirement statements with priority. The Check column is one line a test or a person can pass or fail: "a DM gets no reply and no API call", not "handles DMs correctly". Leave it empty only for a Could.]_
 
-| ID | Requirement | Priority (Must / Should / Could / Won't) | Notes |
-|---|---|---|---|
-| F-01 | _[As a ___, I can ___ so that ___]_ | Must | |
+| ID | Requirement | Priority (Must / Should / Could / Won't) | Check | Notes |
+|---|---|---|---|---|
+| F-01 | _[As a ___, I can ___ so that ___]_ | Must | _[the observable pass/fail]_ | |
 
 **Non-functional requirements**
 
-_[performance budgets (launch time, response time, memory), reliability targets, data durability, security posture, scalability limits, battery and network behaviour. Give numbers.]_
+_[performance budgets (launch time, response time, memory), reliability targets, data durability, security posture, scalability limits, battery and network behaviour, cost. Give numbers.]_
 
 | ID | Requirement | Target | How verified |
 |---|---|---|---|
 | N-01 | _[e.g. cold launch to interactive]_ | _[< 1.5 s on baseline device]_ | _[automated perf test]_ |
 
+**Invariants**
+
+_[what must never happen, whatever else changes: data loss, a secret in a log, a layer reaching past another, data leaving where it is allowed to go. These become the rules every build session is held to, so keep the list short; if it runs past ten, most of them are requirements. Say how each is enforced.]_
+
+| ID | Never | Enforced by |
+|---|---|---|
+| I-01 | _[e.g. message text appears in a log]_ | _[canary test on every commit]_ |
+
+**Tunables**
+
+_[every number a week of use or a playtest might change: timings, caps, thresholds, prices, model ids. Each lives in config (or an inspector field), never as a constant in code.]_
+
+| ID | Name | Default | Range | Set in |
+|---|---|---|---|---|
+| T-01 | _[e.g. debounce]_ | _[4 s]_ | _[1-10 s]_ | _[config file]_ |
+
 **Constraints & assumptions**
 
-_[what you're taking as given: platform rules, budget, team, deadlines, legal, dependencies you don't control. Mark which are verified and which are guesses.]_
+_[what you're taking as given: platform rules, budget, team, deadlines, legal, dependencies you don't control. A verified item names its source and date; an assumption names the milestone that checks it.]_
+
+| Item | Status | Verify by |
+|---|---|---|
+| _[e.g. the API keeps undelivered updates for 24 h]_ | Verified _[source, date]_ / Assumed | _[milestone, or "done"]_ |
 
 ---
 
@@ -184,9 +240,13 @@ _[what you're taking as given: platform rules, budget, team, deadlines, legal, d
 
 _[the core entities, their fields at a scope level, and the relationships between them. A diagram beats prose here. The full schema lives with the code.]_
 
+**Names that never change**
+
+_[machine identifiers that data will live under: package name, bundle id, storage keys, database file names. Renaming one after data exists under it loses or orphans that data, so decide them before the first build.]_
+
 **Data lifecycle**
 
-_[where data is created, stored, synced, backed up, exported, and deleted. Who owns it. What happens on device loss, account deletion, or app uninstall.]_
+_[where data is created, stored, synced, backed up, exported, and deleted. Who owns it, and who can read it. How long each copy is kept, including copies held by third parties. What happens on device loss, account deletion, or app uninstall.]_
 
 **Import / export & portability**
 
@@ -198,7 +258,11 @@ _[bundled content, templates, sample data, onboarding content. Target magnitudes
 
 ---
 
-## Part 7: UX & Visual Design
+## Part 7: Experience Design
+
+*Fill the variant that fits and delete the other. A product with screens fills **UX & visual**. A product people talk to or run (a bot, an agent, a CLI, an API) fills **Voice & behaviour** instead.*
+
+### UX & visual
 
 **Design principles**
 
@@ -216,10 +280,6 @@ _[the design of the screens that matter most, and the transitions between them. 
 
 _[platform-native vs. custom, component library, theming (light/dark), platform conventions you follow and the ones you deliberately break.]_
 
-**Voice, tone & microcopy**
-
-_[how the product talks: labels, empty states, errors, notifications. Give examples of the voice in a good moment and a bad one.]_
-
 **Motion & feedback**
 
 _[how actions feel confirmed: transitions, haptics, sound, progress. Name the feedback for each core action.]_
@@ -228,13 +288,47 @@ _[how actions feel confirmed: transitions, haptics, sound, progress. Name the fe
 
 _[link to the design system / brand guide if one exists.]_
 
+### Voice & behaviour
+
+**Character or voice**
+
+_[who it is or how it sounds: register, sentence length, humour, what it never says, how it behaves when it doesn't know. For an agent with a persona, where the persona is written down and who may change it.]_
+
+**Response rules**
+
+_[length, format, language, when it stays silent, when it drops its voice and speaks plainly.]_
+
+**Precedence**
+
+_[when instructions conflict (hard rules, the user's wishes, the persona, learned behaviour), which wins, top to bottom.]_
+
+### Both variants
+
+**Voice, tone & microcopy**
+
+_[how the product talks: labels, empty states, errors, notifications, replies. Give the voice in a good moment and a bad one; a pair of examples defines the voice better than adjectives.]_
+
+| Situation | Good | Bad |
+|---|---|---|
+| _[e.g. an error]_ | | |
+
 ---
 
 ## Part 8: Technical
 
+*Implementation detail you already know (a schema, a module map, a protocol) is welcome here, marked Decided or Proposed. When the build starts, what the intake confirms of it becomes the decided part of the architecture document, and this draft stays as written.*
+
+**Trade-off order**
+
+_[when engineering goals conflict, which wins: e.g. "privacy > correctness > simplicity > latency > cost". One line saves the build from guessing the same trade-off ten times.]_
+
 **Stack & architecture**
 
-_[languages, frameworks, key libraries, architectural style, notable technical bets. Justify each bet by naming the alternative you rejected.]_
+_[languages, frameworks, key libraries, architectural style, notable technical bets. Pin every version you rely on and say when you checked it: libraries move faster than any document. Say where the tests run on a different runtime from the one that ships. Justify each bet by naming the alternative you rejected.]_
+
+| Layer | Choice and pinned version | Rejected alternative, and why |
+|---|---|---|
+| _[e.g. storage]_ | _[SQLite 3.45+]_ | _[a JSON file: rewritten whole, no search]_ |
 
 **Platform targets & performance**
 
@@ -244,21 +338,31 @@ _[minimum OS versions, baseline devices, performance and size budgets per platfo
 
 _[local persistence, cloud sync strategy, conflict resolution, offline behaviour, migration approach for schema changes.]_
 
-**Integrations & APIs**
+**External systems**
 
-_[third-party services, platform APIs, external dependencies, and the fallback when each one is unavailable.]_
+_[every service, platform API, OS facility or app this talks to or runs inside. A test can't see these, so each one's failure must be designed, not discovered.]_
+
+| System | What crosses the boundary | Version / API | How it fails | What we do then |
+|---|---|---|---|---|
+| _[name]_ | _[data in, data out]_ | | _[outage, rate limit, auth expiry]_ | _[fallback]_ |
 
 **Security & privacy**
 
-_[authentication, authorization, encryption at rest and in transit, secrets handling, threat model at a scope level, data minimization. What you collect, why, and for how long.]_
+_[authentication, authorization, encryption at rest and in transit, secrets handling, data minimization. What you collect, why, and for how long. Then the threats.]_
+
+| Threat | Mitigation | Residual risk |
+|---|---|---|
+| _[e.g. a dependency sends data elsewhere]_ | | _[what remains, and whether it is accepted]_ |
 
 **Build, release & operations**
 
-_[CI/CD, environments, release cadence, crash reporting, monitoring, rollback plan.]_
+_[how it is built, signed, installed and updated, or explicitly not. Environments, monitoring, rollback, and the kill switch: how to stop it fastest if something goes wrong.]_
 
 **Technical risks**
 
-_[the hard problems and their fallback plans.]_
+| Risk | Fallback |
+|---|---|
+| _[the hard problem]_ | _[the plan if it bites]_ |
 
 ---
 
@@ -360,7 +464,7 @@ _[fidelity ladder (sketch → clickable → coded), who tests, how often, and wh
 
 **Quality strategy**
 
-_[what is tested and how: unit, integration, UI, performance, accessibility, device matrix. What runs automatically, what runs by hand, and the release gate (what must be green to ship).]_
+_[what is tested and how: unit, integration, UI, performance, accessibility, device matrix, evals for anything a model decides. What each layer cannot see. What runs automatically, what runs by hand, and the release gate (what must be green to ship). Name anything only one test run or build session can use at a time: a live external app, a single real device, a fixed port.]_
 
 **Definition of "validated"**
 
@@ -372,11 +476,15 @@ _[the bar the core loop must clear before full build commits. Be specific; this 
 
 **Scope statement**
 
-_[the honest size of this product and the team/time available. Rough screen and feature counts belong here; the itemized breakdown lives in the linked tracker.]_
+_[the honest size of this product and the team/time available. Rough screen and feature counts belong here; the build's session plan itemizes them.]_
 
 **Team & roles**
 
 _[who does what, including contracted work (design, backend, QA, localization). For a solo project: which hats you wear and which you buy.]_
+
+**Work done outside the build**
+
+_[anything already built, cleaned, researched or set up elsewhere that the build depends on, and where its output lives. Its outputs only, not its progress.]_
 
 **MVP**
 
@@ -384,16 +492,22 @@ _[the smallest shippable thing that delivers the core value to the primary perso
 
 **Milestones**
 
-| Milestone | Definition of done | Target date |
-|---|---|---|
-| Prototype | Core flow clickable, tested with 5 users | _[date]_ |
-| MVP | Core loop shippable to beta users | _[date]_ |
-| Beta | Full feature set, external testers | _[date]_ |
-| Launch | Store-approved, monitoring live | _[date]_ |
+_[each milestone ends on an exit check that passes or fails. Owner tasks are what only you can do (accounts, purchases, consent, reviews, a human-only step): a build session can't do them, so name them where they block.]_
+
+| Milestone | Exit check | Owner tasks | Target date or effort |
+|---|---|---|---|
+| Prototype | Core flow clickable, tested with 5 users | | _[date]_ |
+| MVP | Core loop shippable to beta users | | _[date]_ |
+| Beta | Full feature set, external testers | | _[date]_ |
+| Launch | Store-approved, monitoring live | | _[date]_ |
+
+**Releases**
+
+_[whether every build session cuts a version or only milestones do; which versions get a tag; whether there is a git remote, and where.]_
 
 **Scope cuts / stretch goals**
 
-_[what gets cut first if time runs short, and what gets added if there's room. Rank them now, before the pressure hits.]_
+_[what gets cut first if time runs short, and what gets added if there's room. Rank them now, before the pressure hits. Then name what is never cut, whatever happens.]_
 
 **Risks & mitigations**
 
@@ -413,7 +527,11 @@ _[products, patterns, articles, and design references you're borrowing from, and
 
 **C. Open questions**
 
-_[unresolved decisions, owners, and deadlines for resolving them.]_
+_[what nobody has settled yet. When one is resolved, its answer goes into the part it settles, marked Decided, and its reasoning into Appendix E; the row is deleted, so this table only ever shows what is still open.]_
+
+| # | Question | Recommendation | Owner | Needed by |
+|---|---|---|---|---|
+| 1 | _[the question]_ | _[the proposed answer, and one line on why]_ | _[who decides]_ | _[milestone]_ |
 
 **D. Living log (research & discovery)**
 
@@ -425,11 +543,11 @@ _[running notes from user research, testing, support, and unexpected insights. D
 
 **E. Decision log**
 
-_[settled decisions and the reasoning behind them, so choices stay settled instead of being re-litigated. ADR-style: what was decided, why, and what alternatives were rejected.]_
+_[settled decisions and the reasoning behind them, so choices stay settled instead of being re-litigated. ADR-style: what was decided, why, and what alternatives were rejected. A changed decision gets a new row, and the old row says what superseded it.]_
 
-| Date | Decision | Rationale | Alternatives considered |
-|---|---|---|---|
-| _[date]_ | _[what was decided]_ | _[why]_ | _[what was rejected, and why]_ |
+| # | Date | Decision | Rationale | Alternatives considered |
+|---|---|---|---|---|
+| 1 | _[date]_ | _[what was decided]_ | _[why]_ | _[what was rejected, and why]_ |
 
 **F. Graveyard (cut & rejected ideas)**
 
@@ -438,3 +556,11 @@ _[features and ideas that were planned or proposed and then cut, with the reason
 | Date | Idea | Why it was cut | Could return if |
 |---|---|---|---|
 | _[date]_ | _[what it was]_ | _[the reason]_ | _[the condition, or "never"]_ |
+
+**G. Cost model**
+
+_[optional: for anything with metered APIs, hosting or paid services. Unit prices with the date you checked them, the usage assumptions, the cost per day and per month, and the one lever that moves the total most.]_
+
+| Line | Per unit | Per day | Per month |
+|---|---|---|---|
+| _[service]_ | | | |
